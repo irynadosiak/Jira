@@ -37,7 +37,6 @@ class TaskAdmin(admin.ModelAdmin):
     )
 
     def get_queryset(self, request):
-        """Optimize queryset with select_related."""
         return super().get_queryset(request).select_related("assignee", "reporter")
 
 
@@ -51,5 +50,4 @@ class TaskActivityAdmin(admin.ModelAdmin):
     readonly_fields = ["timestamp"]
 
     def get_queryset(self, request):
-        """Optimize queryset with select_related."""
         return super().get_queryset(request).select_related("task", "user")

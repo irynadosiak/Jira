@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -15,53 +14,167 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Task',
+            name="Task",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(help_text='Brief title of the task', max_length=200)),
-                ('description', models.TextField(help_text='Detailed description of the task')),
-                ('status', models.CharField(choices=[('todo', 'To Do'), ('in_progress', 'In Progress'), ('in_review', 'In Review'), ('done', 'Done'), ('blocked', 'Blocked')], default='todo', help_text='Current status of the task', max_length=20)),
-                ('estimate', models.PositiveIntegerField(blank=True, help_text='Estimated effort in story points', null=True)),
-                ('priority', models.CharField(choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High'), ('critical', 'Critical')], default='medium', help_text='Priority level of the task', max_length=20)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('due_date', models.DateTimeField(blank=True, null=True)),
-                ('assignee', models.ForeignKey(blank=True, help_text='User assigned to work on this task', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='assigned_tasks', to=settings.AUTH_USER_MODEL)),
-                ('reporter', models.ForeignKey(help_text='User who created this task', on_delete=django.db.models.deletion.CASCADE, related_name='reported_tasks', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "title",
+                    models.CharField(
+                        help_text="Brief title of the task", max_length=200
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(help_text="Detailed description of the task"),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("todo", "To Do"),
+                            ("in_progress", "In Progress"),
+                            ("in_review", "In Review"),
+                            ("done", "Done"),
+                            ("blocked", "Blocked"),
+                        ],
+                        default="todo",
+                        help_text="Current status of the task",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "estimate",
+                    models.PositiveIntegerField(
+                        blank=True,
+                        help_text="Estimated effort in story points",
+                        null=True,
+                    ),
+                ),
+                (
+                    "priority",
+                    models.CharField(
+                        choices=[
+                            ("low", "Low"),
+                            ("medium", "Medium"),
+                            ("high", "High"),
+                            ("critical", "Critical"),
+                        ],
+                        default="medium",
+                        help_text="Priority level of the task",
+                        max_length=20,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("due_date", models.DateTimeField(blank=True, null=True)),
+                (
+                    "assignee",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="User assigned to work on this task",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="assigned_tasks",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "reporter",
+                    models.ForeignKey(
+                        help_text="User who created this task",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="reported_tasks",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='TaskActivity',
+            name="TaskActivity",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('activity_type', models.CharField(choices=[('created', 'Created'), ('field_change', 'Field Changed'), ('comment', 'Comment Added'), ('deleted', 'Deleted')], help_text='Type of activity that occurred', max_length=20)),
-                ('description', models.TextField(help_text='Description of what changed')),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
-                ('task', models.ForeignKey(help_text='Task this activity relates to', on_delete=django.db.models.deletion.CASCADE, related_name='activities', to='tasks.task')),
-                ('user', models.ForeignKey(blank=True, help_text='User who performed the action', null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "activity_type",
+                    models.CharField(
+                        choices=[
+                            ("created", "Created"),
+                            ("field_change", "Field Changed"),
+                            ("comment", "Comment Added"),
+                            ("deleted", "Deleted"),
+                        ],
+                        help_text="Type of activity that occurred",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(help_text="Description of what changed"),
+                ),
+                ("timestamp", models.DateTimeField(auto_now_add=True)),
+                (
+                    "task",
+                    models.ForeignKey(
+                        help_text="Task this activity relates to",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="activities",
+                        to="tasks.task",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="User who performed the action",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name_plural': 'Task Activities',
-                'ordering': ['-timestamp'],
+                "verbose_name_plural": "Task Activities",
+                "ordering": ["-timestamp"],
             },
         ),
         migrations.AddIndex(
-            model_name='task',
-            index=models.Index(fields=['status'], name='tasks_task_status_4a0a95_idx'),
+            model_name="task",
+            index=models.Index(fields=["status"], name="tasks_task_status_4a0a95_idx"),
         ),
         migrations.AddIndex(
-            model_name='task',
-            index=models.Index(fields=['assignee'], name='tasks_task_assigne_a1ddb3_idx'),
+            model_name="task",
+            index=models.Index(
+                fields=["assignee"], name="tasks_task_assigne_a1ddb3_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='task',
-            index=models.Index(fields=['priority'], name='tasks_task_priorit_a900d4_idx'),
+            model_name="task",
+            index=models.Index(
+                fields=["priority"], name="tasks_task_priorit_a900d4_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='task',
-            index=models.Index(fields=['created_at'], name='tasks_task_created_be1ba2_idx'),
+            model_name="task",
+            index=models.Index(
+                fields=["created_at"], name="tasks_task_created_be1ba2_idx"
+            ),
         ),
     ]

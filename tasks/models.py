@@ -1,6 +1,3 @@
-"""
-Task models for basic task management with activity logging.
-"""
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -26,12 +23,22 @@ class Task(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="todo")
-    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default="medium")
-    estimate = models.PositiveIntegerField(null=True, blank=True, help_text="Story points")
-    assignee = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_tasks"
+    priority = models.CharField(
+        max_length=20, choices=PRIORITY_CHOICES, default="medium"
     )
-    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reported_tasks")
+    estimate = models.PositiveIntegerField(
+        null=True, blank=True, help_text="Story points"
+    )
+    assignee = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_tasks",
+    )
+    reporter = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="reported_tasks"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     due_date = models.DateTimeField(null=True, blank=True)
@@ -46,12 +53,12 @@ class Task(models.Model):
         """Save task and create activity log for changes."""
         is_new = not self.pk
         old_task = None
-        
+
         if not is_new:
             old_task = Task.objects.get(pk=self.pk)
-        
+
         super().save(*args, **kwargs)
-        
+
         # Create activity logs
         if is_new:
             TaskActivity.objects.create(
@@ -62,16 +69,26 @@ class Task(models.Model):
         elif old_task:
             changes = []
             if old_task.status != self.status:
-                changes.append(f"Status changed from '{old_task.get_status_display()}' to '{self.get_status_display()}'")
+                changes.append(
+                    f"Status changed from '{old_task.get_status_display()}' to '{self.get_status_display()}'"
+                )
             if old_task.assignee != self.assignee:
-                old_assignee = old_task.assignee.username if old_task.assignee else "Unassigned"
+                old_assignee = (
+                    old_task.assignee.username if old_task.assignee else "Unassigned"
+                )
                 new_assignee = self.assignee.username if self.assignee else "Unassigned"
-                changes.append(f"Assignee changed from '{old_assignee}' to '{new_assignee}'")
+                changes.append(
+                    f"Assignee changed from '{old_assignee}' to '{new_assignee}'"
+                )
             if old_task.priority != self.priority:
-                changes.append(f"Priority changed from '{old_task.get_priority_display()}' to '{self.get_priority_display()}'")
+                changes.append(
+                    f"Priority changed from '{old_task.get_priority_display()}' to '{self.get_priority_display()}'"
+                )
             if old_task.estimate != self.estimate:
-                changes.append(f"Estimate changed from '{old_task.estimate or 'None'}' to '{self.estimate or 'None'}'")
-            
+                changes.append(
+                    f"Estimate changed from '{old_task.estimate or 'None'}' to '{self.estimate or 'None'}'"
+                )
+
             for change in changes:
                 TaskActivity.objects.create(
                     task=self,
