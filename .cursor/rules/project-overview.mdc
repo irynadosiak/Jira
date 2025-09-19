@@ -1,0 +1,125 @@
+# 📋 Task Manager - Project Overview
+
+A simple, clean task management system built with Django, inspired by Jira but focused on simplicity and essential features.
+
+## 🎯 Core Features
+
+### ✅ Task Management
+- **Create, Read, Update, Delete** tasks
+- **Status tracking**: To Do, In Progress, In Review, Done, Blocked
+- **Priority levels**: Low, Medium, High, Critical
+- **Assignments**: Assign tasks to users or leave unassigned
+- **Due dates** and **estimates** (in points)
+- **Audit logging**: Automatic activity tracking for all changes
+
+### 🔍 Filtering & Search
+- **Filter by status, priority, assignee, reporter**
+- **Text search** across task titles and descriptions
+- **Date range filtering** for creation and due dates
+- **Quick filters** with visual indicators
+- **Clear all filters** functionality
+
+### 📊 Dashboard & Analytics
+- **Key metrics**: Total tasks, completion rate, unassigned count
+- **Task status distribution** (doughnut chart)
+- **7-day completion trend** (line chart)
+- **Average completion time** analysis
+- **Recent tasks** overview
+
+### 🎨 Clean UI
+- **Google-inspired design** - minimal, clean, functional
+- **Responsive layout** with Bootstrap 5
+- **Interactive elements** with smooth transitions
+- **Status-based color coding**
+- **Real-time filtering** and search
+
+## 🏗️ Technical Architecture
+
+### Backend (Django 5.2.6)
+```
+Jira/
+├── Jira/                   # Main project settings
+│   ├── settings.py         # Django configuration
+│   ├── urls.py            # URL routing
+│   └── views.py           # Home page view
+└── tasks/                  # Task management app
+    ├── models.py          # Task and TaskActivity models
+    ├── views.py           # UI views (list, detail, create, etc.)
+    ├── api.py             # REST API (DRF serializers & views)
+    ├── urls.py            # URL patterns
+    ├── admin.py           # Django admin config
+    └── tests.py           # Test suite
+```
+
+### Models
+- **Task**: Core entity with status, priority, assignee, due_date, estimate
+- **TaskActivity**: Audit log for all task changes
+- **User**: Django's built-in user model for assignees/reporters
+
+### API Endpoints
+- `GET/POST /api/tasks/` - List/Create tasks
+- `GET/PUT/DELETE /api/tasks/{id}/` - Retrieve/Update/Delete task
+- Advanced filtering with django-filter
+
+### Frontend
+- **Django Templates** with Bootstrap 5
+- **Chart.js** for dashboard visualizations
+- **Vanilla JavaScript** for dynamic interactions
+- **Font Awesome** icons
+
+## 🚀 Quick Start
+
+```bash
+# Install dependencies
+make install
+
+# Run migrations
+make migrate
+
+# Create superuser
+make superuser
+
+# Start development server
+make runserver
+```
+
+Visit `http://localhost:8000` to access the application.
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+make test
+
+# Run with coverage
+make test-coverage
+
+# Code quality checks
+make lint
+make format
+```
+
+## 📁 Key Files
+
+- **`tasks/models.py`** - Data models and business logic
+- **`tasks/views.py`** - Web interface views
+- **`tasks/api.py`** - REST API implementation
+- **`templates/`** - HTML templates with Google-inspired design
+- **`Makefile`** - Development commands
+- **`requirements.txt`** - Python dependencies
+
+## 🎨 Design Philosophy
+
+**Simplicity First**: Clean, minimal interface without overwhelming features
+**Google-Inspired**: Modern, accessible design with subtle colors and smooth interactions
+**Essential Features Only**: Focus on core task management without bloat
+**Responsive**: Works well on desktop and mobile devices
+
+## 🔧 Development Tools
+
+- **Code Quality**: Black (formatting), Flake8 (linting), MyPy (type checking)
+- **Testing**: Django TestCase, DRF APITestCase, Factory Boy
+- **Database**: SQLite (development), easily configurable for production
+- **Frontend**: Bootstrap 5, Chart.js, vanilla JavaScript
+
+---

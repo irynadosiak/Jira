@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Task Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Simple Hero Section -->
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-tasks text-primary" style="font-size: 3rem;"></i>
+            </div>
+            <h1 class="display-5 fw-normal mb-3" style="color: #202124;">Simple Task Manager</h1>
+            <p class="lead text-muted mb-4">Organize your tasks efficiently</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{% url 'tasks:task-list' %}" class="btn btn-primary">
+                    <i class="fas fa-list me-2"></i>View Tasks
+                </a>
+                <a href="{% url 'tasks:dashboard' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-chart-bar me-2"></i>Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Simple Features Grid -->
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-10">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="d-flex align-items-start">
+                    <div class="flex-shrink-0 me-3">
+                        <i class="fas fa-tasks text-primary fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-2">Task Management</h5>
+                        <p class="text-muted mb-0">Create, edit, and track tasks with status updates</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="d-flex align-items-start">
+                    <div class="flex-shrink-0 me-3">
+                        <i class="fas fa-search text-primary fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-2">Filter & Search</h5>
+                        <p class="text-muted mb-0">Find tasks by status, assignee, or search text</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="d-flex align-items-start">
+                    <div class="flex-shrink-0 me-3">
+                        <i class="fas fa-history text-primary fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-2">Activity Tracking</h5>
+                        <p class="text-muted mb-0">Automatic logging of task changes</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="d-flex align-items-start">
+                    <div class="flex-shrink-0 me-3">
+                        <i class="fas fa-code text-primary fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-2">REST API</h5>
+                        <p class="text-muted mb-0">Full API for task operations</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Simple Call to Action -->
+<div class="row justify-content-center mt-5">
+    <div class="col-lg-6">
+        <div class="text-center py-4">
+            <h4 class="mb-3">Get started</h4>
+            <div class="d-flex justify-content-center gap-2">
+                <a href="{% url 'tasks:task-create' %}" class="btn btn-primary">
+                    Create Task
+                </a>
+                <a href="{% url 'tasks:task-list' %}" class="btn btn-outline-secondary">
+                    Browse Tasks
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

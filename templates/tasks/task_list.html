@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+
+{% block title %}Tasks - Task Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-tasks me-2"></i>Tasks
+                </h4>
+                <span class="text-muted">{{ page_obj.paginator.count }} total</span>
+            </div>
+            
+            <div class="card-body">
+                <!-- Advanced Filters -->
+                <form method="get" class="mb-4" id="filterForm">
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select filter-select">
+                                <option value="">All Statuses</option>
+                                {% for status_key, status_display in status_choices %}
+                                <option value="{{ status_key }}" {% if current_status == status_key %}selected{% endif %}>
+                                    {{ status_display }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label">Priority</label>
+                            <select name="priority" class="form-select filter-select">
+                                <option value="">All Priorities</option>
+                                {% for priority_key, priority_display in priority_choices %}
+                                <option value="{{ priority_key }}" {% if current_priority == priority_key %}selected{% endif %}>
+                                    {{ priority_display }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label">Assignee</label>
+                            <select name="assignee" class="form-select filter-select">
+                                <option value="">All Assignees</option>
+                                <option value="unassigned" {% if current_assignee == 'unassigned' %}selected{% endif %}>Unassigned</option>
+                                {% for user in users %}
+                                <option value="{{ user.id }}" {% if current_assignee == user.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ user.get_full_name|default:user.username }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label">Reporter</label>
+                            <select name="reporter" class="form-select filter-select">
+                                <option value="">All Reporters</option>
+                                {% for user in users %}
+                                <option value="{{ user.id }}" {% if current_reporter == user.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ user.get_full_name|default:user.username }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">Search</label>
+                            <div class="input-group">
+                                <input type="text" name="search" class="form-control search-box" 
+                                       value="{{ current_search|default:'' }}" 
+                                       placeholder="Search tasks...">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-1 d-flex align-items-end">
+                            {% if current_status or current_priority or current_assignee or current_reporter or current_search %}
+                            <a href="{% url 'tasks:task-list' %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-times me-1"></i>Clear
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Loading indicator -->
+                    <div class="loading-indicator mt-2" id="loadingIndicator">
+                        <i class="fas fa-spinner fa-spin me-2"></i>Filtering...
+                    </div>
+                </form>
+                
+                <!-- Task Cards -->
+                <div class="task-grid">
+                    {% for task in tasks %}
+                    <div class="task-card status-{{ task.status }}" onclick="location.href='{% url 'tasks:task-detail' task.pk %}'">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-1">
+                                <a href="{% url 'tasks:task-detail' task.pk %}" class="text-decoration-none">
+                                    {{ task.title }}
+                                </a>
+                            </h5>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-{{ task.status }} text-white">{{ task.get_status_display }}</span>
+                                <span class="badge bg-light text-dark priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+                            </div>
+                        </div>
+                        
+                        {% if task.description %}
+                        <p class="text-muted mb-2">{{ task.description|truncatewords:15 }}</p>
+                        {% endif %}
+                        
+                        <div class="task-meta">
+                            <div class="row g-2 small text-muted">
+                                <div class="col-6">
+                                    <i class="fas fa-user me-1"></i>
+                                    <strong>Assignee:</strong> 
+                                    {% if task.assignee %}{{ task.assignee.get_full_name|default:task.assignee.username }}{% else %}Unassigned{% endif %}
+                                </div>
+                                <div class="col-6">
+                                    <i class="fas fa-user-edit me-1"></i>
+                                    <strong>Reporter:</strong> {{ task.reporter.get_full_name|default:task.reporter.username }}
+                                </div>
+                                {% if task.estimate %}
+                                <div class="col-6">
+                                    <i class="fas fa-clock me-1"></i>
+                                    <strong>Estimate:</strong> {{ task.estimate }} points
+                                </div>
+                                {% endif %}
+                                {% if task.due_date %}
+                                <div class="col-6">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    <strong>Due:</strong> {{ task.due_date|date:"M d, Y" }}
+                                </div>
+                                {% endif %}
+                                <div class="col-6">
+                                    <i class="fas fa-calendar-plus me-1"></i>
+                                    <strong>Created:</strong> {{ task.created_at|date:"M d, Y" }}
+                                </div>
+                                <div class="col-6">
+                                    <i class="fas fa-history me-1"></i>
+                                    <strong>Updated:</strong> {{ task.updated_at|date:"M d, Y" }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No tasks found</h5>
+                        <p class="text-muted">
+                            {% if current_status or current_priority or current_assignee or current_reporter or current_search %}
+                            Try adjusting your filters or <a href="{% url 'tasks:task-list' %}">clear all filters</a>
+                            {% else %}
+                            <a href="{% url 'tasks:task-create' %}" class="btn btn-primary">Create your first task</a>
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Tasks pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1&status={{ current_status }}&priority={{ current_priority }}&assignee={{ current_assignee }}&reporter={{ current_reporter }}&search={{ current_search }}">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ current_status }}&priority={{ current_priority }}&assignee={{ current_assignee }}&reporter={{ current_reporter }}&search={{ current_search }}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ current_status }}&priority={{ current_priority }}&assignee={{ current_assignee }}&reporter={{ current_reporter }}&search={{ current_search }}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&status={{ current_status }}&priority={{ current_priority }}&assignee={{ current_assignee }}&reporter={{ current_reporter }}&search={{ current_search }}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .task-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 1rem;
+    }
+    
+    .task-card {
+        border: 1px solid var(--google-border);
+        border-radius: 8px;
+        padding: 16px;
+        background: white;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .task-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+    
+    .task-meta {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #f0f0f0;
+    }
+    
+    .filter-select.active, .search-box.active {
+        border-color: var(--google-blue);
+        background-color: #e3f2fd;
+    }
+    
+    @media (max-width: 768px) {
+        .task-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('filterForm');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const filterSelects = document.querySelectorAll('.filter-select');
+    const searchBox = document.querySelector('.search-box');
+    
+    // Auto-submit on filter change
+    filterSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            showLoading();
+            form.submit();
+        });
+    });
+    
+    // Submit on Enter for search
+    searchBox.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            showLoading();
+            form.submit();
+        }
+    });
+    
+    // Show loading indicator
+    function showLoading() {
+        loadingIndicator.style.display = 'block';
+    }
+    
+    // Update active states
+    function updateActiveStates() {
+        filterSelects.forEach(select => {
+            if (select.value) {
+                select.classList.add('active');
+            } else {
+                select.classList.remove('active');
+            }
+        });
+        
+        if (searchBox.value) {
+            searchBox.classList.add('active');
+        } else {
+            searchBox.classList.remove('active');
+        }
+    }
+    
+    // Initial state update
+    updateActiveStates();
+    
+    // Clear filters on page reload
+    if (performance.getEntriesByType('navigation')[0].type === 'reload') {
+        if (window.location.search) {
+            window.location.href = window.location.pathname;
+        }
+    }
+});
+</script>
+{% endblock %}

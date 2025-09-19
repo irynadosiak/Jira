@@ -1,0 +1,249 @@
+# 🧪 Unit Testing Guidelines
+
+This document outlines the testing strategy and guidelines for the Task Manager Django project.
+
+## 🎯 Testing Philosophy
+
+**Test What Matters**: Focus on business logic, edge cases, and critical functionality
+**Keep It Simple**: Write clear, maintainable tests that serve as documentation
+**Quality Over Quantity**: Better to have fewer, meaningful tests than many trivial ones
+
+## 📋 Current Test Structure
+
+### Test Files Organization
+```
+tasks/
+├── tests.py              # Main test imports and basic tests
+├── test_api.py          # REST API endpoint tests
+├── test_filters.py      # Filtering and search tests
+├── test_models.py       # Model behavior tests
+└── test_web_interface.py # UI/template tests
+```
+
+### Test Categories
+
+#### 🔧 **Model Tests** (`test_models.py`)
+- **Task creation and validation**
+- **String representations**
+- **Activity logging on changes**
+- **Field constraints and defaults**
+
+```python
+class TaskModelTests(TestCase):
+    def test_task_creation(self):
+        # Test basic task creation
+    
+    def test_task_activity_logging(self):
+        # Test automatic activity creation on changes
+    
+    def test_task_string_representation(self):
+        # Test __str__ method
+```
+
+#### 🌐 **API Tests** (`test_api.py`)
+- **CRUD operations** (Create, Read, Update, Delete)
+- **Authentication and permissions**
+- **Serialization and validation**
+- **Error handling and edge cases**
+- **Pagination and ordering**
+
+```python
+class TaskAPITests(APITestCase):
+    def test_create_task(self):
+        # Test task creation via API
+    
+    def test_list_tasks_with_filters(self):
+        # Test filtering functionality
+    
+    def test_update_task(self):
+        # Test task updates
+    
+    def test_delete_task(self):
+        # Test task deletion
+```
+
+#### 🔍 **Filter Tests** (`test_filters.py`)
+- **Status, priority, assignee filtering**
+- **Date range filtering**
+- **Search functionality**
+- **Filter combinations**
+- **Invalid filter handling**
+
+```python
+class TaskFilteringTests(TestCase):
+    def test_status_filtering(self):
+        # Test filtering by status
+    
+    def test_search_functionality(self):
+        # Test text search
+    
+    def test_date_range_filtering(self):
+        # Test filtering by dates
+```
+
+#### 🖥️ **Web Interface Tests** (`test_web_interface.py`)
+- **Page loading and rendering**
+- **Form submissions**
+- **Template context**
+- **Navigation and redirects**
+
+```python
+class TaskWebInterfaceTests(TestCase):
+    def test_task_list_page(self):
+        # Test task list page loads
+    
+    def test_task_creation_form(self):
+        # Test form submission
+    
+    def test_dashboard_page(self):
+        # Test dashboard loads with correct data
+```
+
+## 🚀 Running Tests
+
+### Basic Test Commands
+```bash
+# Run all tests
+make test
+
+# Run specific test file
+python3 manage.py test tasks.test_api
+
+# Run with verbose output
+python3 manage.py test tasks --verbosity=2
+
+# Run specific test method
+python3 manage.py test tasks.test_models.TaskModelTests.test_task_creation
+```
+
+### Test Coverage
+```bash
+# Run tests with coverage
+coverage run --source='.' manage.py test tasks
+coverage report
+coverage html  # Generate HTML report
+```
+
+## 📝 Test Writing Guidelines
+
+### ✅ **Good Test Practices**
+
+1. **Descriptive Test Names**
+   ```python
+   def test_task_status_change_creates_activity_log(self):
+       # Clear what the test does
+   ```
+
+2. **Arrange-Act-Assert Pattern**
+   ```python
+   def test_task_creation(self):
+       # Arrange
+       user = User.objects.create_user('test', 'test@test.com')
+       
+       # Act
+       task = Task.objects.create(title='Test', reporter=user)
+       
+       # Assert
+       self.assertEqual(task.title, 'Test')
+       self.assertEqual(task.status, 'todo')
+   ```
+
+3. **Use Factories for Test Data**
+   ```python
+   # Create test users and tasks with realistic data
+   user = User.objects.create_user('testuser', 'test@example.com')
+   task = Task.objects.create(
+       title='Test Task',
+       description='Test description',
+       reporter=user
+   )
+   ```
+
+4. **Test Edge Cases**
+   ```python
+   def test_task_with_empty_title_raises_error(self):
+       with self.assertRaises(ValidationError):
+           Task.objects.create(title='', reporter=self.user)
+   ```
+
+### ❌ **Avoid These Patterns**
+
+1. **Testing Django's Built-in Functionality**
+   ```python
+   # DON'T test that Django saves to database
+   def test_task_saves_to_database(self):
+       task = Task.objects.create(title='Test')
+       self.assertTrue(Task.objects.filter(title='Test').exists())
+   ```
+
+2. **Overly Complex Test Setup**
+   ```python
+   # DON'T create unnecessary complex scenarios
+   # Keep tests focused and simple
+   ```
+
+3. **Testing Implementation Details**
+   ```python
+   # DON'T test internal method calls
+   # Test behavior and outcomes instead
+   ```
+
+## 🎯 What to Test
+
+### ✅ **High Priority**
+- **Business Logic**: Task status transitions, activity logging
+- **API Endpoints**: CRUD operations, filtering, validation
+- **Model Behavior**: Custom methods, properties, constraints
+- **Critical User Flows**: Task creation, status updates, filtering
+
+### ⚠️ **Medium Priority**
+- **Form Validation**: Custom form logic
+- **Template Rendering**: Complex template logic
+- **Edge Cases**: Boundary conditions, error scenarios
+
+### ❌ **Low Priority (Skip)**
+- **Django Framework Features**: Built-in ORM, admin, etc.
+- **Third-party Library Behavior**: DRF serializers, filters
+- **Static Content**: CSS, JavaScript (unless custom logic)
+- **Database Constraints**: Foreign keys, unique constraints
+
+## 🔧 Test Utilities
+
+### Custom Assertions
+```python
+def assertTaskHasActivity(self, task, activity_type):
+    """Check if task has specific activity type."""
+    self.assertTrue(
+        task.activities.filter(activity_type=activity_type).exists()
+    )
+```
+
+### Test Mixins
+```python
+class TaskTestMixin:
+    """Common test setup for task-related tests."""
+    
+    def setUp(self):
+        self.user = User.objects.create_user('testuser', 'test@example.com')
+        self.task = Task.objects.create(
+            title='Test Task',
+            reporter=self.user
+        )
+```
+
+## 📊 Test Metrics
+
+### Current Coverage Goals
+- **Models**: 90%+ coverage
+- **API Views**: 85%+ coverage
+- **Business Logic**: 95%+ coverage
+- **Overall Project**: 80%+ coverage
+
+### Quality Indicators
+- **Test Execution Time**: < 10 seconds for full suite
+- **Test Reliability**: 0% flaky tests
+- **Test Maintenance**: Easy to update when code changes
+
+---
+
+*Keep tests simple, focused, and valuable! 🎯*

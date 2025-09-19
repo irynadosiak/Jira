@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Task Manager{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --google-blue: #1a73e8;
+            --google-blue-hover: #1557b0;
+            --google-gray: #5f6368;
+            --google-light-gray: #f8f9fa;
+            --google-border: #dadce0;
+        }
+        
+        body {
+            font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #ffffff;
+            color: #202124;
+        }
+        
+        .navbar {
+            background: white !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-bottom: 1px solid var(--google-border);
+        }
+        
+        .navbar-brand {
+            font-weight: 500;
+            color: var(--google-blue) !important;
+            font-size: 1.5rem;
+        }
+        
+        .nav-link {
+            color: var(--google-gray) !important;
+            font-weight: 400;
+            padding: 8px 16px !important;
+            border-radius: 4px;
+            margin: 0 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--google-light-gray);
+            color: var(--google-blue) !important;
+        }
+        
+        .btn-primary {
+            background-color: var(--google-blue);
+            border-color: var(--google-blue);
+            font-weight: 500;
+            padding: 8px 24px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--google-blue-hover);
+            border-color: var(--google-blue-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .btn-outline-primary {
+            color: var(--google-blue);
+            border-color: var(--google-blue);
+            font-weight: 500;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--google-blue);
+            border-color: var(--google-blue);
+        }
+        
+        .card {
+            border: 1px solid var(--google-border);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .form-control, .form-select {
+            border: 1px solid var(--google-border);
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--google-blue);
+            box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.25);
+        }
+        
+        .task-card {
+            border: 1px solid var(--google-border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: white;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .task-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+        
+        .task-card.status-todo { border-left: 4px solid #9aa0a6; }
+        .task-card.status-in_progress { border-left: 4px solid #fbbc04; }
+        .task-card.status-in_review { border-left: 4px solid #4285f4; }
+        .task-card.status-done { border-left: 4px solid #34a853; }
+        .task-card.status-blocked { border-left: 4px solid #ea4335; }
+        
+        .badge {
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 16px;
+        }
+        
+        .badge.bg-todo { background-color: #6c757d !important; }
+        .badge.bg-in_progress { background-color: #fd7e14 !important; }
+        .badge.bg-in_review { background-color: #0dcaf0 !important; }
+        .badge.bg-done { background-color: #198754 !important; }
+        .badge.bg-blocked { background-color: #dc3545 !important; }
+        
+        .priority-low { color: #6c757d; }
+        .priority-medium { color: #fd7e14; }
+        .priority-high { color: #dc3545; }
+        .priority-critical { color: #6f42c1; font-weight: bold; }
+        
+        .stats-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            border: 1px solid var(--google-border);
+            transition: all 0.2s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .stats-label {
+            color: var(--google-gray);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .container-fluid {
+            max-width: 1400px;
+        }
+        
+        .alert {
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+        }
+        
+        .loading-indicator {
+            display: none;
+            color: var(--google-blue);
+            font-weight: 500;
+        }
+        
+        .filter-active {
+            background-color: #e3f2fd !important;
+            border-color: var(--google-blue) !important;
+        }
+        
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding: 0 12px;
+            }
+            
+            .task-card {
+                padding: 12px;
+            }
+            
+            .stats-card {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'tasks:task-list' %}">
+                <i class="fas fa-tasks me-2"></i>Task Manager
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tasks:task-list' %}">
+                            <i class="fas fa-list me-1"></i>Tasks
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tasks:dashboard' %}">
+                            <i class="fas fa-chart-bar me-1"></i>Dashboard
+                        </a>
+                    </li>
+                </ul>
+                
+                <div class="d-flex">
+                    <a href="{% url 'tasks:task-create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>New Task
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Messages -->
+        {% if messages %}
+        <div class="row">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block extra_js %}
+    {% endblock %}
+</body>
+</html>

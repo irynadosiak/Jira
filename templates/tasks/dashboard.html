@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Task Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-chart-bar me-2"></i>Dashboard
+        </h2>
+    </div>
+</div>
+
+<!-- Key Metrics Row -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-primary">{{ total_tasks }}</div>
+            <div class="stats-label">Total Tasks</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number" style="color: #34a853;">{{ completed_tasks }}</div>
+            <div class="stats-label">Completed</div>
+            <small class="text-muted">{{ completion_rate }}% completion rate</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number" style="color: #ea4335;">{{ unassigned_count }}</div>
+            <div class="stats-label">Unassigned</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-info">{{ avg_completion_time }}</div>
+            <div class="stats-label">Avg Completion</div>
+            <small class="text-muted">Days to complete</small>
+        </div>
+    </div>
+</div>
+
+<!-- Essential Charts -->
+<div class="row g-4 mb-4">
+    <!-- Task Status Distribution -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Task Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Task Completion Trend -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Completion Trend (Last 7 Days)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="trendChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Tasks -->
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tasks me-2"></i>Recent Tasks
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for task in recent_tasks %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="task-card status-{{ task.status }}">
+                            <h6><a href="{% url 'tasks:task-detail' task.pk %}" class="text-decoration-none">{{ task.title }}</a></h6>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span class="badge bg-{{ task.status }}">{{ task.get_status_display }}</span>
+                                <small class="text-muted">{{ task.updated_at|date:"M d" }}</small>
+                            </div>
+                            <div class="small text-muted mt-1">
+                                {% if task.assignee %}{{ task.assignee.get_full_name|default:task.assignee.username }}{% else %}Unassigned{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <p class="text-muted text-center py-3">
+                            No tasks yet. <a href="{% url 'tasks:task-create' %}">Create your first task!</a>
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Chart.js default configuration
+    Chart.defaults.font.family = "'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    Chart.defaults.color = '#5f6368';
+    
+    // Task Status Distribution Chart
+    const statusData = {{ status_data_json|safe }};
+    if (statusData.some(d => d.value > 0)) {
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: statusData.map(d => d.label),
+                datasets: [{
+                    data: statusData.map(d => d.value),
+                    backgroundColor: statusData.map(d => d.color),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Task Completion Trend Chart
+    const trendData = {{ completion_trend_json|safe }};
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels: trendData.map(d => d.date),
+            datasets: [{
+                label: 'Completed',
+                data: trendData.map(d => d.completed),
+                borderColor: '#4285f4',
+                backgroundColor: 'rgba(66, 133, 244, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#4285f4',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

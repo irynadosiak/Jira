@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+        <h2>{{ task.title }}</h2>
+        <div>
+            <a href="{% url 'tasks:task-update' task.pk %}" class="btn btn-secondary">Edit</a>
+            <a href="{% url 'tasks:task-delete' task.pk %}" class="btn" style="background: #dc3545;">Delete</a>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+        <div>
+            <h3>Details</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 8px 0; font-weight: bold; width: 30%;">Status:</td><td>{{ task.get_status_display }}</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold;">Priority:</td><td>{{ task.get_priority_display }}</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold;">Assignee:</td><td>{% if task.assignee %}{{ task.assignee.get_full_name|default:task.assignee.username }}{% else %}Unassigned{% endif %}</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold;">Reporter:</td><td>{{ task.reporter.get_full_name|default:task.reporter.username }}</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold;">Estimate:</td><td>{{ task.estimate|default:"Not set" }} points</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold;">Due Date:</td><td>{{ task.due_date|date:"M d, Y"|default:"Not set" }}</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold;">Created:</td><td>{{ task.created_at|date:"M d, Y H:i" }}</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold;">Updated:</td><td>{{ task.updated_at|date:"M d, Y H:i" }}</td></tr>
+            </table>
+        </div>
+        
+        <div>
+            <h3>Quick Actions</h3>
+            <form method="post" action="{% url 'tasks:task-quick-update' task.pk %}">
+                {% csrf_token %}
+                {% if task.status == 'todo' %}
+                    <button type="submit" name="status" value="in_progress" class="btn" style="background: #ffa500; margin: 5px 0;">Start Progress</button>
+                {% elif task.status == 'in_progress' %}
+                    <button type="submit" name="status" value="in_review" class="btn" style="background: #17a2b8; margin: 5px 0;">Move to Review</button>
+                    <button type="submit" name="status" value="done" class="btn" style="background: #28a745; margin: 5px 0;">Mark as Done</button>
+                    <button type="submit" name="status" value="blocked" class="btn" style="background: #dc3545; margin: 5px 0;">Block</button>
+                {% elif task.status == 'in_review' %}
+                    <button type="submit" name="status" value="done" class="btn" style="background: #28a745; margin: 5px 0;">Mark as Done</button>
+                    <button type="submit" name="status" value="in_progress" class="btn" style="background: #ffa500; margin: 5px 0;">Back to Progress</button>
+                {% elif task.status == 'blocked' %}
+                    <button type="submit" name="status" value="in_progress" class="btn" style="background: #ffa500; margin: 5px 0;">Unblock</button>
+                {% elif task.status == 'done' %}
+                    <button type="submit" name="status" value="todo" class="btn btn-secondary" style="margin: 5px 0;">Reopen</button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+    
+    {% if task.description %}
+    <div style="margin-bottom: 30px;">
+        <h3>Description</h3>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; white-space: pre-wrap;">{{ task.description }}</div>
+    </div>
+    {% endif %}
+    
+    <div>
+        <h3>Activity History</h3>
+        {% for activity in task.activities.all %}
+        <div style="border-left: 3px solid #e0e0e0; padding-left: 15px; margin: 15px 0;">
+            <div style="font-weight: bold; color: #1a73e8;">{{ activity.get_activity_type_display }}</div>
+            <div style="margin: 5px 0;">{{ activity.description }}</div>
+            <small style="color: #5f6368;">{{ activity.timestamp|date:"M d, Y H:i" }}{% if activity.user %} by {{ activity.user.username }}{% endif %}</small>
+        </div>
+        {% empty %}
+        <p style="color: #5f6368;">No activity yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
