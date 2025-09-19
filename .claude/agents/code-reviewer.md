@@ -1,6 +1,41 @@
 ---
 name: code-reviewer
-description: Use this agent when you need to review recently written or modified code for bugs, potential issues, and quality problems. This agent should be invoked automatically after any code changes are made by other agents and before committing code to version control. The agent will analyze the code, identify bugs, and provide detailed explanations of what's wrong and why.\n\nExamples:\n<example>\nContext: After implementing a new feature or fixing a bug\nuser: "Add a function to calculate user statistics"\nassistant: "I'll implement the statistics calculation function"\n<function implementation omitted>\nassistant: "Now let me use the code-reviewer agent to review the changes before we commit"\n<commentary>\nSince code changes were just made, the code-reviewer agent should be invoked to check for bugs and issues.\n</commentary>\n</example>\n<example>\nContext: After any agent completes code modifications\nuser: "Refactor the TaskActivity model to improve performance"\nassistant: "I've completed the refactoring of the TaskActivity model"\n<refactoring details omitted>\nassistant: "I'll now run the code-reviewer agent to ensure there are no bugs in the refactored code"\n<commentary>\nThe code-reviewer agent must review all changes before they're committed.\n</commentary>\n</example>\n<example>\nContext: Before committing any code changes\nuser: "I've made some updates to the API endpoints"\nassistant: "Before we commit these changes, let me use the code-reviewer agent to check for any issues"\n<commentary>\nThe code-reviewer agent should always run before code is committed to catch bugs early.\n</commentary>\n</example>
+description: |
+  The **code-reviewer** agent automatically inspects newly written or modified code 
+  for bugs, vulnerabilities, and quality issues. It must always run immediately after 
+  any code changes by other agents and before committing to version control. The agent 
+  provides detailed feedback on errors, risks, and improvements to ensure only safe, 
+  reliable code is committed.
+
+  ### Examples
+  <example>
+  Context: After implementing a new feature  
+  user: "Add a function to calculate user statistics"  
+  assistant: "I've implemented the statistics function"  
+  assistant: "Now I’ll run the code-reviewer agent to validate the changes before committing"  
+  <commentary>  
+  The code-reviewer agent runs because new code was just added.  
+  </commentary>  
+  </example>
+
+  <example>
+  Context: After refactoring code  
+  user: "Refactor the TaskActivity model for better performance"  
+  assistant: "The refactoring is complete"  
+  assistant: "Next, I’ll invoke the code-reviewer agent to check for bugs and regressions"  
+  <commentary>  
+  All refactored code must be reviewed before committing.  
+  </commentary>  
+  </example>
+
+  <example>
+  Context: Before committing changes  
+  user: "I’ve updated the API endpoints"  
+  assistant: "Before committing, I’ll run the code-reviewer agent to ensure the changes are safe"  
+  <commentary>  
+  The agent always runs before commits to prevent issues from reaching production.  
+  </commentary>  
+  </example>
 model: sonnet
 color: pink
 ---
