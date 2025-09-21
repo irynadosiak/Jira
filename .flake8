@@ -1,0 +1,21 @@
+[flake8]
+exclude = 
+    ./venv,
+    ./.venv,
+    ./__pycache__,
+    ./.git,
+    ./*/migrations,
+    ./.pytest_cache,
+    ./.mypy_cache,
+    ./*.egg-info
+max-line-length = 88
+extend-ignore = 
+    # Black compatibility
+    E203,  # whitespace before ':'
+    W503,  # line break before binary operator
+per-file-ignores =
+    # Django settings files
+    */settings.py:E501
+    # Test files can have longer lines
+    test_*.py:E501
+    **/tests.py:E501

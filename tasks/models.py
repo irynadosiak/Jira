@@ -119,3 +119,39 @@ class TaskActivity(models.Model):
     def __str__(self):
         user_info = f" by {self.user.username}" if self.user else ""
         return f"{self.get_activity_type_display()}: {self.description}{user_info}"
+
+
+class TaskSummary(models.Model):
+    """AI-generated summary for task activities."""
+
+    task = models.OneToOneField(
+        Task,
+        on_delete=models.CASCADE,
+        related_name="ai_summary",
+        help_text="Task this summary belongs to",
+    )
+    summary_text = models.TextField(help_text="AI-generated summary of task activities")
+    last_activity_processed = models.ForeignKey(
+        TaskActivity,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Last activity included in this summary",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, help_text="When the summary was first created"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True, help_text="When the summary was last updated"
+    )
+    token_usage = models.PositiveIntegerField(
+        default=0, help_text="Total OpenAI tokens used for this summary"
+    )
+
+    class Meta:
+        ordering = ["-updated_at"]
+        verbose_name = "Task Summary"
+        verbose_name_plural = "Task Summaries"
+
+    def __str__(self):
+        return f"AI Summary for {self.task.title}"

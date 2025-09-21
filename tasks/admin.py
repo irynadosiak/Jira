@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Task, TaskActivity
+from .models import Task, TaskActivity, TaskSummary
 
 
 @admin.register(Task)
@@ -51,3 +51,51 @@ class TaskActivityAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("task", "user")
+
+
+@admin.register(TaskSummary)
+class TaskSummaryAdmin(admin.ModelAdmin):
+    """Admin interface for TaskSummary model."""
+
+    list_display = [
+        "task",
+        "summary_preview",
+        "token_usage",
+        "created_at",
+        "updated_at",
+    ]
+    list_filter = ["created_at", "updated_at"]
+    search_fields = ["task__title", "summary_text"]
+    readonly_fields = ["created_at", "updated_at"]
+
+    fieldsets = (
+        (
+            "Task Information",
+            {"fields": ("task", "last_activity_processed")},
+        ),
+        (
+            "Summary Content",
+            {"fields": ("summary_text",)},
+        ),
+        (
+            "Metadata",
+            {
+                "fields": ("token_usage", "created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    @admin.display(description="Summary Preview")
+    def summary_preview(self, obj):
+        """Show a preview of the summary text."""
+        if len(obj.summary_text) > 100:
+            return obj.summary_text[:100] + "..."
+        return obj.summary_text
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("task", "last_activity_processed")
+        )

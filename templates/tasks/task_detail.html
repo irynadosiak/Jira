@@ -54,6 +54,51 @@
     </div>
     {% endif %}
     
+    <!-- AI Summary Section -->
+    <div class="summary-section" style="margin: 30px 0; padding: 20px; background: #f8f9fa; border: 1px solid #dadce0; border-radius: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #202124; display: flex; align-items: center;">
+                <i class="fas fa-brain" style="margin-right: 8px; color: #5f6368;"></i>
+                AI Summary
+            </h3>
+            <div>
+                <button id="generate-summary-btn" class="btn summary-btn-primary" style="background: #1a73e8; color: white; border: 1px solid #1a73e8; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 0.3s; font-weight: 500;">
+                    <span id="btn-text">Generate Summary</span>
+                    <span id="btn-spinner" class="spinner-border spinner-border-sm" style="display: none; margin-left: 8px;"></span>
+                </button>
+                <button id="delete-summary-btn" class="btn summary-btn-danger" style="background: #dc3545; color: white; border: 1px solid #dc3545; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-left: 8px; display: none; transition: all 0.3s; font-weight: 500;">
+                    <i class="fas fa-trash" style="margin-right: 4px;"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
+        
+        <!-- Info message -->
+        <div id="info-message" style="background: #e3f2fd; border: 1px solid #bbdefb; color: #1976d2; padding: 10px; border-radius: 4px; margin-bottom: 15px; display: none;">
+            <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+            <span>Generating AI summary... This may take a few moments.</span>
+        </div>
+        
+        <div id="summary-content" style="background: white; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+            <p id="summary-text" style="color: #5f6368; margin: 0; line-height: 1.5;">
+                No summary available. Click "Generate Summary" to create an AI-powered summary of this task's activities.
+            </p>
+            <div id="summary-meta" style="margin-top: 10px; font-size: 0.85em; color: #5f6368; display: none; border-top: 1px solid #f0f0f0; padding-top: 10px;">
+                <i class="fas fa-clock" style="margin-right: 4px;"></i>
+                <span id="summary-timestamp"></span>
+                <span style="margin-left: 15px;">
+                    <i class="fas fa-chart-bar" style="margin-right: 4px;"></i>
+                    <span id="summary-tokens"></span> tokens used
+                </span>
+            </div>
+        </div>
+        
+        <!-- Error/Success Messages -->
+        <div id="summary-message" style="margin-top: 10px; padding: 10px; border-radius: 4px; display: none;">
+            <span id="message-text"></span>
+        </div>
+    </div>
+    
     <div>
         <h3>Activity History</h3>
         {% for activity in task.activities.all %}
@@ -67,4 +112,314 @@
         {% endfor %}
     </div>
 </div>
+
+<style>
+/* AI Summary Section Styles */
+.summary-section {
+    transition: all 0.3s ease;
+}
+
+.summary-section:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.summary-btn-primary:hover {
+    background: #1557b0 !important;
+    border-color: #1557b0 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.summary-btn-danger:hover {
+    background: #c82333 !important;
+    border-color: #c82333 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.summary-btn-primary:disabled,
+.summary-btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+#summary-content {
+    transition: all 0.3s ease;
+}
+
+#summary-text {
+    transition: color 0.3s ease;
+}
+
+#info-message {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .summary-section {
+        margin: 20px 0;
+        padding: 15px;
+    }
+    
+    .summary-section h3 {
+        font-size: 1.2rem;
+        margin-bottom: 10px !important;
+    }
+    
+    .summary-section > div:first-child {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+    }
+    
+    .summary-section button {
+        width: 100%;
+        margin-left: 0 !important;
+        margin-bottom: 5px;
+    }
+    
+    #summary-content {
+        padding: 12px;
+    }
+    
+    #summary-meta {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 5px;
+    }
+    
+    #summary-meta span:last-child {
+        margin-left: 0 !important;
+    }
+}
+
+/* Animation for loading spinner */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.spinner-border {
+    animation: spin 1s linear infinite;
+}
+
+/* Message animations */
+#summary-message,
+#info-message {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Generating state */
+.generating {
+    position: relative;
+    overflow: hidden;
+}
+
+.generating::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(26,115,232,0.1), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // DOM Elements
+    const generateBtn = document.getElementById('generate-summary-btn');
+    const deleteBtn = document.getElementById('delete-summary-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+    const summaryText = document.getElementById('summary-text');
+    const summaryMeta = document.getElementById('summary-meta');
+    const summaryTimestamp = document.getElementById('summary-timestamp');
+    const summaryTokens = document.getElementById('summary-tokens');
+    const summaryMessage = document.getElementById('summary-message');
+    const messageText = document.getElementById('message-text');
+    const infoMessage = document.getElementById('info-message');
+    const summarySection = document.querySelector('.summary-section');
+    
+    // API URLs
+    const taskId = {{ task.id }};
+    const summaryUrl = `/tasks/api/${taskId}/summary/`;
+    const generateUrl = `/tasks/api/${taskId}/generate-summary/`;
+    
+    // Load existing summary on page load
+    loadExistingSummary();
+    
+    // Event Listeners
+    generateBtn.addEventListener('click', generateSummary);
+    deleteBtn.addEventListener('click', deleteSummary);
+    
+    function getCsrfToken() {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        return csrfToken ? csrfToken.value : '';
+    }
+    
+    function showMessage(message, isError = false) {
+        messageText.textContent = message;
+        summaryMessage.style.display = 'block';
+        summaryMessage.style.background = isError ? 'rgba(220,53,69,0.2)' : 'rgba(40,167,69,0.2)';
+        summaryMessage.style.border = `1px solid ${isError ? 'rgba(220,53,69,0.5)' : 'rgba(40,167,69,0.5)'}`;
+        
+        // Hide message after 5 seconds
+        setTimeout(() => {
+            summaryMessage.style.display = 'none';
+        }, 5000);
+    }
+    
+    function setLoadingState(isLoading) {
+        generateBtn.disabled = isLoading;
+        deleteBtn.disabled = isLoading;
+        
+        if (isLoading) {
+            btnText.style.display = 'none';
+            btnSpinner.style.display = 'inline-block';
+            infoMessage.style.display = 'block';
+            summarySection.classList.add('generating');
+        } else {
+            btnText.style.display = 'inline-block';
+            btnSpinner.style.display = 'none';
+            infoMessage.style.display = 'none';
+            summarySection.classList.remove('generating');
+        }
+    }
+    
+    function loadExistingSummary() {
+        fetch(summaryUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else if (response.status === 404) {
+                // No summary exists yet
+                return null;
+            }
+            throw new Error('Failed to load summary');
+        })
+        .then(data => {
+            if (data) {
+                displaySummary(data);
+                btnText.textContent = 'Regenerate Summary';
+                deleteBtn.style.display = 'inline-block';
+            }
+        })
+        .catch(error => {
+            console.log('No existing summary found or error loading summary:', error);
+            // This is expected when no summary exists yet
+        });
+    }
+    
+    function generateSummary() {
+        setLoadingState(true);
+        
+        fetch(generateUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            displaySummary(data.summary);
+            btnText.textContent = 'Regenerate Summary';
+            deleteBtn.style.display = 'inline-block';
+            showMessage(data.message || 'Summary generated successfully!', false);
+        })
+        .catch(error => {
+            console.error('Error generating summary:', error);
+            showMessage('Error generating summary: ' + error.message, true);
+        })
+        .finally(() => {
+            setLoadingState(false);
+        });
+    }
+    
+    function deleteSummary() {
+        if (!confirm('Are you sure you want to delete this summary? This action cannot be undone.')) {
+            return;
+        }
+        
+        setLoadingState(true);
+        
+        fetch(summaryUrl, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // Reset to initial state
+            summaryText.textContent = 'No summary available. Click "Generate Summary" to create an AI-powered summary of this task\'s activities.';
+            summaryText.style.color = '#5f6368';
+            summaryMeta.style.display = 'none';
+            btnText.textContent = 'Generate Summary';
+            deleteBtn.style.display = 'none';
+            showMessage(data.message || 'Summary deleted successfully!', false);
+        })
+        .catch(error => {
+            console.error('Error deleting summary:', error);
+            showMessage('Error deleting summary: ' + error.message, true);
+        })
+        .finally(() => {
+            setLoadingState(false);
+        });
+    }
+    
+    function displaySummary(data) {
+        summaryText.textContent = data.summary_text;
+        summaryText.style.color = '#202124';
+        
+        // Format and display metadata
+        const createdDate = new Date(data.created_at);
+        const updatedDate = new Date(data.updated_at);
+        const isUpdated = createdDate.getTime() !== updatedDate.getTime();
+        
+        summaryTimestamp.textContent = isUpdated 
+            ? `Updated ${updatedDate.toLocaleDateString()} at ${updatedDate.toLocaleTimeString()}`
+            : `Created ${createdDate.toLocaleDateString()} at ${createdDate.toLocaleTimeString()}`;
+        summaryTokens.textContent = data.token_usage || 0;
+        summaryMeta.style.display = 'block';
+    }
+});
+</script>
+
 {% endblock %}

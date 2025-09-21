@@ -21,5 +21,14 @@ urlpatterns = [
         api.TaskActivityListView.as_view(),
         name="api-task-activities",
     ),
+    # AI Summary endpoints
+    path(
+        "api/<int:pk>/summary/", api.TaskSummaryView.as_view(), name="api-task-summary"
+    ),
+    path(
+        "api/<int:pk>/generate-summary/",
+        api.TaskSummaryGenerateView.as_view(),
+        name="api-task-generate-summary",
+    ),
     path("api/users/", api.UserListView.as_view(), name="api-users"),
 ]

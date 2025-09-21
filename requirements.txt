@@ -2,6 +2,10 @@ Django==5.2.6
 djangorestframework==3.14.0
 django-filter==23.3
 django-debug-toolbar==4.2.0
+# Environment variables
+python-dotenv==1.0.0
+# AI Integration
+openai>=1.0.0
 # Code quality tools
 black==23.9.1
 flake8==6.1.0

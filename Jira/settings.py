@@ -9,24 +9,34 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+import os
 import socket
 from pathlib import Path
 from typing import List
 
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-08#2qwf5zag$an&d61*5%bd9*j72-gb17k%dj84y6al=zh&pu1"
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "django-insecure-08#2qwf5zag$an&d61*5%bd9*j72-gb17k%dj84y6al=zh&pu1"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS: List[str] = []
+ALLOWED_HOSTS: List[str] = [
+    host.strip() for host in os.getenv("ALLOWED_HOSTS", "").split(",") if host.strip()
+]
 
 
 # Application definition
@@ -152,3 +162,16 @@ if DEBUG:
         "127.0.0.1",
         "10.0.2.2",
     ]
+
+# OpenAI Configuration
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")  # Default to gpt-3.5-turbo
+OPENAI_MAX_TOKENS = int(
+    os.getenv("OPENAI_MAX_TOKENS", "500")
+)  # Default max tokens for summaries
+OPENAI_TEMPERATURE = float(
+    os.getenv("OPENAI_TEMPERATURE", "0.7")
+)  # Default temperature
+
+# Use mock AI responses for development when no API key is available
+USE_MOCK_AI = os.getenv("USE_MOCK_AI", "True").lower() in ("true", "1", "yes")

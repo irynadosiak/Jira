@@ -31,7 +31,7 @@ test:
 # Linting commands
 lint: check-format type-check
 	@echo "Running flake8..."
-	flake8 .
+	flake8 . --exclude=venv,.venv,__pycache__,.git
 	@echo "Checking import order..."
 	isort --check-only --diff .
 	@echo "✅ All linting checks passed!"

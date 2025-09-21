@@ -1,10 +1,14 @@
 import django_filters
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, serializers
+from rest_framework import filters, generics, serializers, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from django.contrib.auth.models import User
+from django.db.models import Prefetch
 
-from .models import Task, TaskActivity
+from .models import Task, TaskActivity, TaskSummary
+from .services import TaskSummaryService
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -23,6 +27,26 @@ class TaskActivitySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class TaskSummarySerializer(serializers.ModelSerializer):
+    """Serializer for TaskSummary model."""
+
+    class Meta:
+        model = TaskSummary
+        fields = [
+            "summary_text",
+            "created_at",
+            "updated_at",
+            "token_usage",
+            "last_activity_processed",
+        ]
+        read_only_fields = [
+            "created_at",
+            "updated_at",
+            "token_usage",
+            "last_activity_processed",
+        ]
+
+
 class TaskSerializer(serializers.ModelSerializer):
     """Task serializer with related data."""
 
@@ -39,6 +63,7 @@ class TaskSerializer(serializers.ModelSerializer):
         queryset=User.objects.all(), source="reporter", write_only=True, required=False
     )
     activities = TaskActivitySerializer(many=True, read_only=True)
+    ai_summary = TaskSummarySerializer(read_only=True, required=False)
 
     class Meta:
         model = Task
@@ -94,10 +119,103 @@ class TaskListCreateView(generics.ListCreateAPIView):
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Get, update, delete tasks."""
 
-    queryset = Task.objects.select_related("reporter", "assignee").prefetch_related(
-        "activities"
-    )
     serializer_class = TaskSerializer
+
+    def get_queryset(self):
+        # Limit activities to last 10 by default, configurable via query param
+        activity_limit = int(self.request.query_params.get("activity_limit", 10))
+
+        # Create prefetch for recent activities only
+        recent_activities = TaskActivity.objects.order_by("-timestamp")[:activity_limit]
+
+        return Task.objects.select_related("reporter", "assignee").prefetch_related(
+            Prefetch("activities", queryset=recent_activities), "ai_summary"
+        )
+
+
+class TaskSummaryView(APIView):
+    """Get existing summary for a task."""
+
+    def get(self, request, pk):
+        """Get existing summary for the task."""
+        try:
+            task = Task.objects.get(pk=pk)
+            summary = getattr(task, "ai_summary", None)
+
+            if summary:
+                serializer = TaskSummarySerializer(summary)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"message": "No summary available for this task"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        except Task.DoesNotExist:
+            return Response(
+                {"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to retrieve summary: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def delete(self, request, pk):
+        """Delete existing summary for the task."""
+        try:
+            task = Task.objects.get(pk=pk)
+            summary_service = TaskSummaryService()
+            deleted = summary_service.delete_summary(task.id)
+
+            if deleted:
+                return Response(
+                    {"message": "Summary deleted successfully"},
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {"message": "No summary found to delete"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        except Task.DoesNotExist:
+            return Response(
+                {"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to delete summary: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class TaskSummaryGenerateView(APIView):
+    """Generate or update AI summary for a task."""
+
+    def post(self, request, pk):
+        """Generate or update AI summary for the task."""
+        try:
+            task = Task.objects.get(pk=pk)
+            summary_service = TaskSummaryService()
+            summary = summary_service.create_or_update_summary(task.id)
+
+            serializer = TaskSummarySerializer(summary)
+            return Response(
+                {
+                    "message": "Summary generated successfully",
+                    "summary": serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Task.DoesNotExist:
+            return Response(
+                {"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to generate summary: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class TaskActivityListView(generics.ListAPIView):

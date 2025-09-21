@@ -147,7 +147,9 @@ class TaskFilteringTests(TestCase):
             reverse("tasks:task-list"),
             {
                 "status": "done",
-                "assignee": str(self.user2.id),  # user2 is not assigned to any done tasks
+                "assignee": str(
+                    self.user2.id
+                ),  # user2 is not assigned to any done tasks
             },
         )
         self.assertEqual(response.status_code, 200)
