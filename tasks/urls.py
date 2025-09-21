@@ -30,5 +30,11 @@ urlpatterns = [
         api.TaskSummaryGenerateView.as_view(),
         name="api-task-generate-summary",
     ),
+    # AI Estimation endpoints
+    path(
+        "api/<int:pk>/estimate/",
+        api.TaskEstimationView.as_view(),
+        name="api-task-estimate",
+    ),
     path("api/users/", api.UserListView.as_view(), name="api-users"),
 ]

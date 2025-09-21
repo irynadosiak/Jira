@@ -1,28 +1,28 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="card">
-    <h2>{% if task %}Edit Task{% else %}Create New Task{% endif %}</h2>
+<div class="card" style="padding: 48px 64px; margin: 24px;">
+    <h1 style="margin: 0 0 32px 0; font-size: 32px; font-weight: 600; color: #111827;">{% if task %}Edit Task{% else %}Create New Task{% endif %}</h1>
     
-    <form method="post" style="max-width: 600px;">
+    <form method="post" style="max-width: 700px;">
         {% csrf_token %}
         
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Title *</label>
+        <div style="margin-bottom: 28px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 15px; color: #374151;">Title *</label>
             <input type="text" name="title" value="{{ task.title|default:'' }}" required 
-                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                   style="width: 100%; padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 15px; background: #fafbfc; transition: all 0.2s;">
         </div>
         
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Description</label>
-            <textarea name="description" rows="4" 
-                      style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; resize: vertical;">{{ task.description|default:'' }}</textarea>
+        <div style="margin-bottom: 28px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 15px; color: #374151;">Description</label>
+            <textarea name="description" rows="5" 
+                      style="width: 100%; padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 15px; resize: vertical; background: #fafbfc; line-height: 1.5; transition: all 0.2s;">{{ task.description|default:'' }}</textarea>
         </div>
         
         {% if task %}
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Status</label>
-            <select name="status" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+        <div style="margin-bottom: 28px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 15px; color: #374151;">Status</label>
+            <select name="status" style="width: 100%; padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 15px; background: #fafbfc; transition: all 0.2s;">
                 {% for status_key, status_display in status_choices %}
                 <option value="{{ status_key }}" {% if task.status == status_key %}selected{% endif %}>
                     {{ status_display }}
@@ -32,9 +32,9 @@
         </div>
         {% endif %}
         
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Priority</label>
-            <select name="priority" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+        <div style="margin-bottom: 28px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 15px; color: #374151;">Priority</label>
+            <select name="priority" style="width: 100%; padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 15px; background: #fafbfc; transition: all 0.2s;">
                 {% for priority_key, priority_display in priority_choices %}
                 <option value="{{ priority_key }}" {% if task.priority == priority_key %}selected{% endif %}>
                     {{ priority_display }}
@@ -43,9 +43,9 @@
             </select>
         </div>
         
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Assignee</label>
-            <select name="assignee" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+        <div style="margin-bottom: 28px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 15px; color: #374151;">Assignee</label>
+            <select name="assignee" style="width: 100%; padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 15px; background: #fafbfc; transition: all 0.2s;">
                 <option value="">Unassigned</option>
                 {% for user in users %}
                 <option value="{{ user.id }}" {% if task.assignee_id == user.id %}selected{% endif %}>
@@ -55,23 +55,578 @@
             </select>
         </div>
         
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Estimate (Story Points)</label>
-            <input type="number" name="estimate" value="{{ task.estimate|default:'' }}" min="1" max="100"
-                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+        <div style="margin-bottom: 28px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label style="font-weight: 500; font-size: 15px; color: #374151;">Estimate (Story Points)</label>
+                <button type="button" id="ai-estimate-btn" class="btn" style="background: #e8f5e8; color: #2e7d32; border: 1px solid #c8e6c9; padding: 10px 20px; font-size: 13px; border-radius: 8px; line-height: 1.4; font-weight: 500;">
+                    <i class="fas fa-magic" style="margin-right: 4px;"></i>
+                    <span id="ai-estimate-text">AI Estimate</span>
+                    <span id="ai-estimate-spinner" class="spinner-border spinner-border-sm" style="display: none; margin-left: 4px;"></span>
+                </button>
+            </div>
+            <input type="number" id="estimate-input" name="estimate" value="{{ task.estimate|default:'' }}" min="1" max="100"
+                   style="width: 100%; padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 15px; background: #fafbfc; transition: all 0.2s;">
+            <div id="ai-estimate-result" style="margin-top: 12px; padding: 16px; background: #f0f9ff; border: 1px solid #dbeafe; border-radius: 8px; display: none;">
+                <small style="color: #1e40af; font-size: 13px; line-height: 1.4;">
+                    <i class="fas fa-lightbulb" style="margin-right: 6px;"></i>
+                    AI suggests: <strong id="ai-suggested-hours"></strong> hours (confidence: <span id="ai-confidence"></span>%)
+                </small>
+            </div>
         </div>
         
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Due Date</label>
+        <div style="margin-bottom: 28px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 15px; color: #374151;">Due Date</label>
             <input type="datetime-local" name="due_date" value="{{ task.due_date|date:'Y-m-d\TH:i'|default:'' }}"
-                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                   style="width: 100%; padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 15px; background: #fafbfc; transition: all 0.2s;">
         </div>
         
-        <div style="margin-top: 30px;">
-            <button type="submit" class="btn">{% if task %}Update Task{% else %}Create Task{% endif %}</button>
+        <div style="margin-top: 40px; padding-top: 32px; border-top: 1px solid #e5e7eb; display: flex; gap: 16px;">
+            <button type="submit" class="btn btn-primary" style="background: #e0f2fe; color: #0277bd; border: 1px solid #b3e5fc; padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+                {% if task %}Update Task{% else %}Create Task{% endif %}
+            </button>
             <a href="{% if task %}{% url 'tasks:task-detail' task.pk %}{% else %}{% url 'tasks:task-list' %}{% endif %}" 
-               class="btn btn-secondary" style="margin-left: 10px;">Cancel</a>
+               class="btn btn-secondary" style="background: #f8f9fa; color: #495057; border: 1px solid #dee2e6; padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.2s;">Cancel</a>
         </div>
     </form>
 </div>
+
+<!-- AI Estimation Modal -->
+<div id="estimation-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="margin: 0; color: #202124; font-size: 20px; font-weight: 400;">
+                <i class="fas fa-magic" style="margin-right: 8px; color: #1a73e8;"></i>
+                AI Estimation Result
+            </h3>
+        </div>
+        
+        <div class="modal-body">
+            <div style="text-align: center; margin: 24px 0;">
+                <div style="font-size: 56px; font-weight: 300; color: #1e40af; margin-bottom: 12px;" id="modal-hours">
+                    2.3h
+                </div>
+                <div style="color: #6b7280; font-size: 15px; margin-bottom: 24px;">
+                    Estimated effort • <span id="modal-confidence">80%</span> confidence
+                </div>
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: left;">
+                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 10px; font-weight: 500;">
+                        <i class="fas fa-lightbulb" style="margin-right: 8px; color: #f59e0b;"></i>
+                        AI Analysis
+                    </div>
+                    <div style="font-size: 14px; color: #374151; line-height: 1.5;">
+                        Based on similar tasks and complexity analysis, this task appears to be a moderate effort requiring approximately 2-3 hours of focused work.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-actions">
+            <button type="button" id="modal-cancel" class="btn-secondary">
+                Cancel
+            </button>
+            <button type="button" id="modal-use-estimate" class="btn-primary">
+                Use This Estimate
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Alert Modal -->
+<div id="custom-alert-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 style="margin: 0; color: #202124; font-size: 18px; font-weight: 400;">
+                <i class="fas fa-info-circle" style="margin-right: 8px; color: #1a73e8;"></i>
+                Information
+            </h3>
+        </div>
+        
+        <div class="modal-body">
+            <div style="margin: 20px 0;">
+                <p id="alert-message" style="color: #374151; font-size: 14px; line-height: 1.5; margin: 0;"></p>
+            </div>
+        </div>
+        
+        <div class="modal-actions">
+            <button type="button" id="alert-ok-btn" class="btn-primary">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Form Styles */
+.card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    background: white;
+}
+
+/* Form Field Focus States */
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="datetime-local"]:focus,
+textarea:focus,
+select:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    background: white !important;
+}
+
+/* Button Hover States */
+.btn-primary:hover {
+    background: #b3e5fc !important;
+    border-color: #81d4fa !important;
+    color: #01579b !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(2, 119, 189, 0.15);
+}
+
+.btn-secondary:hover {
+    background: #e9ecef !important;
+    border-color: #adb5bd !important;
+    color: #343a40 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(52, 58, 64, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .card {
+        padding: 32px 24px !important;
+        margin: 16px !important;
+    }
+    
+    h1 {
+        font-size: 24px !important;
+        margin-bottom: 24px !important;
+    }
+    
+    form {
+        max-width: none !important;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        padding: 12px 20px !important;
+        font-size: 14px !important;
+    }
+    
+    div[style*="display: flex; gap: 16px"] {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+    
+    .btn-secondary {
+        text-align: center !important;
+        justify-content: center !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .card {
+        padding: 24px 16px !important;
+        margin: 12px !important;
+    }
+    
+    input, textarea, select {
+        padding: 12px 14px !important;
+        font-size: 14px !important;
+    }
+    
+    label {
+        font-size: 14px !important;
+    }
+    
+    div[style*="margin-bottom: 28px"] {
+        margin-bottom: 24px !important;
+    }
+}
+
+/* Google-style Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    max-width: 480px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    transform: scale(0.9) translateY(-20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.show .modal-content {
+    transform: scale(1) translateY(0);
+}
+
+.modal-header {
+    padding: 24px 24px 0 24px;
+    border-bottom: none;
+}
+
+.modal-body {
+    padding: 0 24px;
+}
+
+.modal-actions {
+    padding: 16px 24px 24px 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-primary {
+    background: #e0f2fe;
+    color: #0277bd;
+    border: 1px solid #b3e5fc;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    line-height: 1.4;
+}
+
+.btn-primary:hover {
+    background: #b3e5fc;
+    border-color: #81d4fa;
+    color: #01579b;
+    box-shadow: 0 2px 8px rgba(2, 119, 189, 0.15);
+}
+
+.btn-secondary {
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    line-height: 1.4;
+}
+
+.btn-secondary:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+    color: #343a40;
+}
+
+/* Responsive Modal */
+@media (max-width: 640px) {
+    .modal-content {
+        margin: 16px;
+        width: calc(100% - 32px);
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+    
+    .modal-actions button {
+        width: 100%;
+    }
+}
+
+/* AI Estimate Button Styles */
+#ai-estimate-btn:hover {
+    background: #c8e6c9 !important;
+    border-color: #a5d6a7 !important;
+    color: #1b5e20 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.15);
+}
+
+#ai-estimate-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.spinner-border-sm {
+    width: 0.875rem;
+    height: 0.875rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#ai-estimate-result {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const aiEstimateBtn = document.getElementById('ai-estimate-btn');
+    const aiEstimateText = document.getElementById('ai-estimate-text');
+    const aiEstimateSpinner = document.getElementById('ai-estimate-spinner');
+    const aiEstimateResult = document.getElementById('ai-estimate-result');
+    const aiSuggestedHours = document.getElementById('ai-suggested-hours');
+    const aiConfidence = document.getElementById('ai-confidence');
+    const estimateInput = document.getElementById('estimate-input');
+    const titleInput = document.querySelector('input[name="title"]');
+    const descriptionInput = document.querySelector('textarea[name="description"]');
+    
+    if (aiEstimateBtn) {
+        aiEstimateBtn.addEventListener('click', getAIEstimate);
+    }
+    
+    function getCsrfToken() {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        return csrfToken ? csrfToken.value : '';
+    }
+    
+    function setAIEstimateLoadingState(isLoading) {
+        aiEstimateBtn.disabled = isLoading;
+        
+        if (isLoading) {
+            aiEstimateText.style.display = 'none';
+            aiEstimateSpinner.style.display = 'inline-block';
+        } else {
+            aiEstimateText.style.display = 'inline-block';
+            aiEstimateSpinner.style.display = 'none';
+        }
+    }
+    
+    function getAIEstimate() {
+        const title = titleInput.value.trim();
+        const description = descriptionInput.value.trim();
+        
+        if (!title) {
+            showCustomAlert('Please enter a task title first.', () => {
+                titleInput.focus();
+            });
+            return;
+        }
+        
+        if (!description) {
+            showCustomAlert('Please enter a task description first for better estimation accuracy.', () => {
+                descriptionInput.focus();
+            });
+            return;
+        }
+        
+        setAIEstimateLoadingState(true);
+        aiEstimateResult.style.display = 'none';
+        
+        // Create a temporary task object for estimation
+        const tempTaskData = {
+            title: title,
+            description: description,
+            priority: document.querySelector('select[name="priority"]')?.value || 'medium',
+        };
+        
+        // Since we can't estimate a task that doesn't exist yet, we'll use a different approach
+        // For new tasks, we'll show a message about needing to save first
+        {% if not task %}
+        // For new tasks, show a helpful message
+        setTimeout(() => {
+            setAIEstimateLoadingState(false);
+            aiEstimateResult.style.display = 'block';
+            aiEstimateResult.style.background = '#fff3cd';
+            aiEstimateResult.style.borderColor = '#ffeaa7';
+            aiEstimateResult.innerHTML = `
+                <small style="color: #856404;">
+                    <i class="fas fa-info-circle" style="margin-right: 4px;"></i>
+                    To get an AI estimation, please save this task first. Then you can use the "Get Estimation" button on the task detail page.
+                </small>
+            `;
+        }, 1000);
+        {% else %}
+        // For existing tasks, use the estimation API
+        const taskId = {{ task.id }};
+        const estimationUrl = `/tasks/api/${taskId}/estimate/`;
+        
+        fetch(estimationUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.detail || data.error);
+            }
+            
+            // Display the AI suggestion
+            aiSuggestedHours.textContent = data.estimated_hours;
+            aiConfidence.textContent = Math.round(data.confidence_score * 100);
+            aiEstimateResult.style.display = 'block';
+            aiEstimateResult.style.background = '#e3f2fd';
+            aiEstimateResult.style.borderColor = '#bbdefb';
+            
+            // Show custom modal instead of confirm dialog
+            showEstimationModal(data.estimated_hours, Math.round(data.confidence_score * 100));
+        })
+        .catch(error => {
+            console.error('Error getting AI estimate:', error);
+            aiEstimateResult.style.display = 'block';
+            aiEstimateResult.style.background = '#f8d7da';
+            aiEstimateResult.style.borderColor = '#f5c6cb';
+            aiEstimateResult.innerHTML = `
+                <small style="color: #721c24;">
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 4px;"></i>
+                    Error getting AI estimate: ${error.message}
+                </small>
+            `;
+        })
+        .finally(() => {
+            setAIEstimateLoadingState(false);
+        });
+        {% endif %}
+    }
+    
+    // Modal functions
+    function showEstimationModal(hours, confidence) {
+        const modal = document.getElementById('estimation-modal');
+        const modalHours = document.getElementById('modal-hours');
+        const modalConfidence = document.getElementById('modal-confidence');
+        const modalCancel = document.getElementById('modal-cancel');
+        const modalUseEstimate = document.getElementById('modal-use-estimate');
+        
+        // Update modal content
+        modalHours.textContent = `${hours}h`;
+        modalConfidence.textContent = `${confidence}%`;
+        
+        // Show modal with animation
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+        
+        // Handle modal actions
+        const closeModal = () => {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        };
+        
+        // Cancel button
+        modalCancel.onclick = closeModal;
+        
+        // Use estimate button
+        modalUseEstimate.onclick = () => {
+            estimateInput.value = Math.round(hours);
+            estimateInput.focus();
+            closeModal();
+            
+            // Show success message
+            aiEstimateResult.style.display = 'block';
+            aiEstimateResult.style.background = '#e8f5e8';
+            aiEstimateResult.style.borderColor = '#c3e6c3';
+            aiEstimateResult.innerHTML = `
+                <small style="color: #2e7d32;">
+                    <i class="fas fa-check-circle" style="margin-right: 4px;"></i>
+                    Estimate updated to ${Math.round(hours)} hours based on AI analysis
+                </small>
+            `;
+        };
+        
+        // Close on overlay click
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        };
+        
+        // Close on Escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    }
+    
+    // Custom Alert Function
+    function showCustomAlert(message, callback) {
+        const alertModal = document.getElementById('custom-alert-modal');
+        const alertMessage = document.getElementById('alert-message');
+        const alertOkBtn = document.getElementById('alert-ok-btn');
+        
+        alertMessage.textContent = message;
+        
+        // Show modal with animation
+        alertModal.style.display = 'flex';
+        setTimeout(() => {
+            alertModal.classList.add('show');
+        }, 10);
+        
+        // Handle OK button
+        const closeAlert = () => {
+            alertModal.classList.remove('show');
+            setTimeout(() => {
+                alertModal.style.display = 'none';
+            }, 300);
+            if (callback) callback();
+        };
+        
+        // Remove existing event listeners
+        alertOkBtn.onclick = null;
+        
+        // Add new event listener
+        alertOkBtn.onclick = closeAlert;
+        
+        // Close on overlay click
+        alertModal.onclick = (e) => {
+            if (e.target === alertModal) {
+                closeAlert();
+            }
+        };
+        
+        // Close on Escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                closeAlert();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    }
+});
+</script>
+
 {% endblock %}

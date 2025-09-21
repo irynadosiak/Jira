@@ -1,3 +1,5 @@
+import logging
+
 import django_filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, serializers, status
@@ -8,7 +10,9 @@ from django.contrib.auth.models import User
 from django.db.models import Prefetch
 
 from .models import Task, TaskActivity, TaskSummary
-from .services import TaskSummaryService
+from .services import EstimationError, TaskEstimationService, TaskSummaryService
+
+logger = logging.getLogger(__name__)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -233,3 +237,54 @@ class UserListView(generics.ListAPIView):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class TaskEstimationView(APIView):
+    """API view for getting AI-powered task estimations."""
+
+    def get(self, request, pk):
+        """Get AI estimation for a task."""
+        try:
+            # Create estimation service
+            estimation_service = TaskEstimationService()
+
+            # Check if task can be estimated
+            if not estimation_service.can_estimate(pk):
+                return Response(
+                    {
+                        "error": "Task cannot be estimated",
+                        "detail": "Task must have both title and description for accurate estimation",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Get estimation
+            result = estimation_service.estimate_task(pk)
+
+            return Response(
+                {
+                    "task_id": pk,
+                    "estimated_hours": result.estimated_hours,
+                    "confidence_score": result.confidence_score,
+                    "reasoning": result.reasoning,
+                    "similar_tasks": result.similar_tasks,
+                    "metadata": result.metadata,
+                }
+            )
+
+        except Task.DoesNotExist:
+            return Response(
+                {"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        except EstimationError as e:
+            logger.error(f"Estimation error for task {pk}: {str(e)}")
+            return Response(
+                {"error": "Estimation failed", "detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            logger.error(f"Failed to estimate task {pk}: {str(e)}")
+            return Response(
+                {"error": "Failed to estimate task"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

@@ -3,23 +3,80 @@ from .base import (
     AIConfigurationError,
     AIProvider,
     AIProviderError,
-    AIProviderFactory,
     AIServiceError,
-    AISummaryResult,
 )
-from .mock_service import MockAIProvider
-from .openai_service import OpenAIProvider
-from .task_summary import TaskSummaryService
+from .builders import EstimationResultBuilder, MockEstimationBuilder, ReasoningBuilder
+from .estimation import (
+    AISimilarityEstimator,
+    EstimationConfig,
+    EstimationConfigurationError,
+    EstimationError,
+    EstimationResult,
+    EstimatorFactory,
+    InsufficientDataError,
+    MockAISimilarityEstimator,
+    TaskEstimationService,
+    TaskEstimator,
+)
+from .interfaces import (
+    AIProviderServiceInterface,
+    TaskEstimationServiceInterface,
+    TaskSummaryServiceInterface,
+)
+from .prompts import PromptBuilderFactory
+from .repositories import RepositoryFactory, TaskRepository, TaskSummaryRepository
+from .summary import (
+    MockSummaryProvider,
+    OpenAISummaryProvider,
+    SummaryConfigurationError,
+    SummaryError,
+    SummaryProvider,
+    SummaryProviderError,
+    SummaryProviderFactory,
+    SummaryResult,
+    TaskSummaryAnalyzer,
+    TaskSummaryService,
+)
 
 __all__ = [
+    # Core AI services
     "AIConfig",
-    "AISummaryResult",
     "AIProvider",
     "AIProviderError",
     "AIConfigurationError",
     "AIServiceError",
-    "AIProviderFactory",
-    "OpenAIProvider",
-    "MockAIProvider",
     "TaskSummaryService",
+    # Summary services (new structure)
+    "SummaryResult",
+    "SummaryProvider",
+    "SummaryError",
+    "SummaryConfigurationError",
+    "SummaryProviderError",
+    "SummaryProviderFactory",
+    "OpenAISummaryProvider",
+    "MockSummaryProvider",
+    "TaskSummaryAnalyzer",
+    # Estimation services
+    "EstimationConfig",
+    "EstimationResult",
+    "TaskEstimator",
+    "EstimationError",
+    "EstimationConfigurationError",
+    "InsufficientDataError",
+    "EstimatorFactory",
+    "TaskEstimationService",
+    "AISimilarityEstimator",
+    "MockAISimilarityEstimator",
+    # Builders and utilities
+    "EstimationResultBuilder",
+    "MockEstimationBuilder",
+    "ReasoningBuilder",
+    "PromptBuilderFactory",
+    "RepositoryFactory",
+    "TaskRepository",
+    "TaskSummaryRepository",
+    # Interfaces
+    "TaskEstimationServiceInterface",
+    "TaskSummaryServiceInterface",
+    "AIProviderServiceInterface",
 ]

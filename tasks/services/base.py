@@ -10,7 +10,6 @@ from ..models import Task, TaskActivity
 logger = logging.getLogger(__name__)
 
 
-# Configuration Classes
 @dataclass
 class AIConfig:
     """Configuration class for AI services."""
@@ -36,15 +35,6 @@ class AIConfig:
         )
 
 
-@dataclass
-class AISummaryResult:
-    """Result from AI summary generation."""
-
-    summary: str
-    tokens_used: int
-
-
-# Exception Hierarchy
 class AIProviderError(Exception):
     """Base exception for AI provider errors."""
 
@@ -63,7 +53,6 @@ class AIServiceError(AIProviderError):
     pass
 
 
-# Abstract Base Classes
 class AIProvider(ABC):
     """Abstract base class for AI providers."""
 
@@ -83,7 +72,7 @@ class AIProvider(ABC):
         task: Task,
         new_activities: List[TaskActivity],
         previous_summary: Optional[str] = None,
-    ) -> AISummaryResult:
+    ):
         """Generate or update task summary using AI."""
         pass
 
@@ -161,27 +150,3 @@ class AIProvider(ABC):
             )
 
         return "\n".join(context_parts)
-
-
-# Factory Pattern
-class AIProviderFactory:
-    """Factory for creating AI provider instances."""
-
-    @staticmethod
-    def create_provider(config: Optional[AIConfig] = None) -> AIProvider:
-        """Create an AI provider based on configuration."""
-        try:
-            if config is None:
-                config = AIConfig.from_settings()
-
-            if config.use_mock:
-                from .mock_service import MockAIProvider
-
-                return MockAIProvider(config)
-            else:
-                from .openai_service import OpenAIProvider
-
-                return OpenAIProvider(config)
-        except Exception as e:
-            logger.error(f"Failed to create AI provider: {str(e)}")
-            raise AIConfigurationError(f"Failed to create AI provider: {str(e)}")

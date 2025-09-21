@@ -27,6 +27,13 @@ class TaskSummaryAPITests(APITestCase):
 
     def test_get_existing_summary(self):
         """Test GET request for existing task summary."""
+        # Create a summary first
+        from .models import TaskSummary
+
+        TaskSummary.objects.create(
+            task=self.task, summary_text="Test summary text", token_usage=100
+        )
+
         url = reverse("tasks:api-task-summary", kwargs={"pk": self.task.pk})
         response = self.client.get(url)
 

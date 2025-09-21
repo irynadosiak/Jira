@@ -5,15 +5,14 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 
 from .models import Task, TaskActivity, TaskSummary
-from .services import (
-    AIConfig,
-    AIConfigurationError,
-    AIProviderFactory,
-    AIServiceError,
-    AISummaryResult,
-    MockAIProvider,
-    OpenAIProvider,
-    TaskSummaryService,
+from .services import AIConfig, AIServiceError, TaskSummaryService
+from .services.summary import (
+    MockSummaryProvider,
+    OpenAISummaryProvider,
+    SummaryConfigurationError,
+    SummaryError,
+    SummaryProviderFactory,
+    SummaryResult,
 )
 
 
@@ -58,13 +57,13 @@ class MockAIProviderTests(TestCase):
         )
 
     def test_mock_provider_generate_summary(self):
-        """Test generating summary with MockAIProvider."""
-        provider = MockAIProvider(self.config)
+        """Test generating summary with MockSummaryProvider."""
+        provider = MockSummaryProvider(self.config)
         activities = list(self.task.activities.all())
 
         result = provider.generate_task_summary(self.task, activities)
 
-        self.assertIsInstance(result, AISummaryResult)
+        self.assertIsInstance(result, SummaryResult)
         self.assertIn(self.task.title, result.summary)
         self.assertGreater(result.tokens_used, 0)
 
@@ -91,12 +90,12 @@ class OpenAIProviderTests(TestCase):
             use_mock=False,
         )
 
-        with self.assertRaises(AIConfigurationError):
-            OpenAIProvider(config)
+        with self.assertRaises(SummaryError):
+            OpenAISummaryProvider(config)
 
-    @patch("tasks.services.openai_service.OpenAI")
+    @patch("tasks.services.summary.openai_provider.OpenAI")
     def test_openai_provider_generate_summary_success(self, mock_openai):
-        """Test successful summary generation with OpenAIProvider."""
+        """Test successful summary generation with OpenAISummaryProvider."""
         mock_client = Mock()
         mock_openai.return_value = mock_client
 
@@ -108,7 +107,7 @@ class OpenAIProviderTests(TestCase):
 
         mock_client.chat.completions.create.return_value = mock_response
 
-        provider = OpenAIProvider(self.config)
+        provider = OpenAISummaryProvider(self.config)
 
         # Create minimal test data
         user = User.objects.create_user(username="testuser")
@@ -117,19 +116,19 @@ class OpenAIProviderTests(TestCase):
 
         result = provider.generate_task_summary(task, activities)
 
-        self.assertIsInstance(result, AISummaryResult)
+        self.assertIsInstance(result, SummaryResult)
         self.assertEqual(result.summary, "Generated summary text")
         self.assertEqual(result.tokens_used, 75)
 
 
-class AIProviderFactoryTests(TestCase):
-    """Test AIProviderFactory functionality."""
+class SummaryProviderFactoryTests(TestCase):
+    """Test SummaryProviderFactory functionality."""
 
     @override_settings(OPENAI_API_KEY=None, USE_MOCK_AI=True)
     def test_factory_create_mock_provider(self):
-        """Test factory creates MockAIProvider from settings."""
-        provider = AIProviderFactory.create_provider()
-        self.assertIsInstance(provider, MockAIProvider)
+        """Test factory creates MockSummaryProvider from settings."""
+        provider = SummaryProviderFactory.create_provider()
+        self.assertIsInstance(provider, MockSummaryProvider)
 
     def test_factory_handles_configuration_error(self):
         """Test factory handles configuration errors."""
@@ -141,8 +140,8 @@ class AIProviderFactoryTests(TestCase):
             use_mock=False,  # This should cause an error
         )
 
-        with self.assertRaises(AIConfigurationError):
-            AIProviderFactory.create_provider(config)
+        with self.assertRaises(SummaryConfigurationError):
+            SummaryProviderFactory.create_provider(config)
 
 
 class TaskSummaryServiceTests(TestCase):
@@ -226,7 +225,7 @@ class TaskSummaryServiceTests(TestCase):
         # Test AI provider error
         mock_provider = Mock()
         mock_provider.generate_task_summary.side_effect = AIServiceError("Test error")
-        service_with_error = TaskSummaryService(ai_provider=mock_provider)
+        service_with_error = TaskSummaryService(summary_provider=mock_provider)
 
         with self.assertRaises(AIServiceError):
             service_with_error.create_or_update_summary(self.task.id)
