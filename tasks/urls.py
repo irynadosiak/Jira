@@ -36,5 +36,21 @@ urlpatterns = [
         api.TaskEstimationView.as_view(),
         name="api-task-estimate",
     ),
+    # AI Parser endpoints
+    path(
+        "api/parse-text/",
+        api.TaskParseView.as_view(),
+        name="api-task-parse",
+    ),
+    path(
+        "api/create-from-text/",
+        api.TaskCreateFromTextView.as_view(),
+        name="api-task-create-from-text",
+    ),
+    path(
+        "api/parse-suggestions/",
+        api.TaskParseSuggestionsView.as_view(),
+        name="api-task-parse-suggestions",
+    ),
     path("api/users/", api.UserListView.as_view(), name="api-users"),
 ]

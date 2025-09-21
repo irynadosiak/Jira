@@ -21,7 +21,19 @@ from .estimation import (
 from .interfaces import (
     AIProviderServiceInterface,
     TaskEstimationServiceInterface,
+    TaskParserServiceInterface,
     TaskSummaryServiceInterface,
+)
+from .parser import (
+    MockTaskParser,
+    OpenAITaskParser,
+    ParserConfigurationError,
+    ParserError,
+    ParseResult,
+    ParserProviderError,
+    TaskParser,
+    TaskParserFactory,
+    TaskParserService,
 )
 from .prompts import PromptBuilderFactory
 from .repositories import RepositoryFactory, TaskRepository, TaskSummaryRepository
@@ -75,8 +87,19 @@ __all__ = [
     "RepositoryFactory",
     "TaskRepository",
     "TaskSummaryRepository",
+    # Parser services
+    "ParseResult",
+    "TaskParser",
+    "ParserError",
+    "ParserConfigurationError",
+    "ParserProviderError",
+    "TaskParserFactory",
+    "OpenAITaskParser",
+    "MockTaskParser",
+    "TaskParserService",
     # Interfaces
     "TaskEstimationServiceInterface",
     "TaskSummaryServiceInterface",
+    "TaskParserServiceInterface",
     "AIProviderServiceInterface",
 ]

@@ -295,9 +295,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial state update
     updateActiveStates();
     
+    // Auto-open AI create modal if parameter is present
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('ai_create') === '1') {
+        setTimeout(() => {
+            showAICreateModal();
+            // Clean up URL
+            window.history.replaceState({}, '', window.location.pathname);
+        }, 500);
+    }
+    
     // Clear filters on page reload
     if (performance.getEntriesByType('navigation')[0].type === 'reload') {
-        if (window.location.search) {
+        if (window.location.search && !urlParams.get('ai_create')) {
             window.location.href = window.location.pathname;
         }
     }

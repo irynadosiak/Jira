@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
-from ..models import TaskSummary
+from ..models import Task, TaskSummary
 from .estimation.base import EstimationResult
 
 
@@ -238,5 +238,37 @@ class NotificationServiceInterface(ABC):
         service: Service name
         error: Error message
         task_id: Optional task ID
+        """
+        pass
+
+
+class TaskParserServiceInterface(ABC):
+    """Interface for task text parsing services."""
+
+    @abstractmethod
+    def parse_text_to_task_data(self, text: str):
+        """
+        Parse natural language text into structured task data.
+
+        text: Natural language text describing a task
+        """
+        pass
+
+    @abstractmethod
+    def create_task_from_text(self, text: str, reporter_id: int) -> Task:
+        """
+        Parse text and create a task directly.
+
+        text: Natural language text describing a task
+        reporter_id: ID of the user creating the task
+        """
+        pass
+
+    @abstractmethod
+    def get_parsing_suggestions(self, text: str) -> Dict[str, Any]:
+        """
+        Get suggestions for improving text parsing.
+
+        text: Text to analyze
         """
         pass

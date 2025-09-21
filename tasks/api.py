@@ -10,7 +10,13 @@ from django.contrib.auth.models import User
 from django.db.models import Prefetch
 
 from .models import Task, TaskActivity, TaskSummary
-from .services import EstimationError, TaskEstimationService, TaskSummaryService
+from .services import (
+    EstimationError,
+    ParserError,
+    TaskEstimationService,
+    TaskParserService,
+    TaskSummaryService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -286,5 +292,146 @@ class TaskEstimationView(APIView):
             logger.error(f"Failed to estimate task {pk}: {str(e)}")
             return Response(
                 {"error": "Failed to estimate task"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class ParseResultSerializer(serializers.Serializer):
+    """Serializer for parse results."""
+
+    title = serializers.CharField(max_length=200)
+    description = serializers.CharField()
+    priority = serializers.CharField(max_length=10)
+    estimate = serializers.IntegerField(allow_null=True, required=False)
+    due_date = serializers.CharField(max_length=10, allow_null=True, required=False)
+    task_type = serializers.CharField(max_length=20)
+    tags = serializers.ListField(
+        child=serializers.CharField(max_length=50), required=False
+    )
+    confidence_score = serializers.FloatField()
+    raw_text = serializers.CharField()
+
+
+class TaskParseView(APIView):
+    """API view for parsing text into task data."""
+
+    def post(self, request):
+        """Parse natural language text into structured task data."""
+        text = request.data.get("text", "").strip()
+
+        if not text:
+            return Response(
+                {"error": "Text is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            service = TaskParserService()
+            parse_result = service.parse_text_to_task_data(text)
+
+            serializer = ParseResultSerializer(parse_result)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except ParserError as e:
+            logger.error(f"Parser error: {str(e)}")
+            return Response(
+                {"error": "Parsing failed", "detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            logger.error(f"Failed to parse text: {str(e)}")
+            return Response(
+                {"error": "Failed to parse text"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class TaskCreateFromTextView(APIView):
+    """API view for creating tasks directly from text."""
+
+    def post(self, request):
+        """Create a task from natural language text."""
+        text = request.data.get("text", "").strip()
+        reporter_id = request.data.get("reporter_id")
+        ai_estimation = request.data.get("ai_estimation")
+        ai_reasoning = request.data.get("ai_reasoning")
+
+        if not text:
+            return Response(
+                {"error": "Text is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not reporter_id:
+            return Response(
+                {"error": "Reporter ID is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Verify reporter exists
+            User.objects.get(pk=reporter_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Reporter not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            service = TaskParserService()
+            task = service.create_task_from_text(text, reporter_id)
+
+            # If AI estimation was provided, update the task
+            if ai_estimation is not None:
+                task.estimate = ai_estimation
+                task.save()
+
+                # Log the AI estimation reasoning for future reference
+                if ai_reasoning:
+                    from .models import TaskActivity
+
+                    TaskActivity.objects.create(
+                        task=task,
+                        activity_type="estimation",
+                        description=f"AI Estimation: {ai_estimation} SP. Reasoning: {ai_reasoning}",
+                        user_id=reporter_id,
+                    )
+
+            # Return created task data
+            serializer = TaskSerializer(task)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except ParserError as e:
+            logger.error(f"Parser error: {str(e)}")
+            return Response(
+                {"error": "Parsing failed", "detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            logger.error(f"Failed to create task from text: {str(e)}")
+            return Response(
+                {"error": "Failed to create task"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class TaskParseSuggestionsView(APIView):
+    """API view for getting parsing suggestions."""
+
+    def post(self, request):
+        """Get suggestions for improving text parsing."""
+        text = request.data.get("text", "").strip()
+
+        if not text:
+            return Response(
+                {"error": "Text is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            service = TaskParserService()
+            suggestions = service.get_parsing_suggestions(text)
+
+            return Response(suggestions, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Failed to get parsing suggestions: {str(e)}")
+            return Response(
+                {"error": "Failed to get suggestions"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
