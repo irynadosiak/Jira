@@ -4,19 +4,22 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <!-- Simple Hero Section -->
+    <div class="col-lg-10">
+        <!-- Enhanced Hero Section -->
         <div class="text-center py-5">
             <div class="mb-4">
-                <i class="fas fa-tasks text-primary" style="font-size: 3rem;"></i>
+                <i class="fas fa-robot text-primary" style="font-size: 3.5rem;"></i>
             </div>
-            <h1 class="display-5 fw-normal mb-3" style="color: #202124;">Simple Task Manager</h1>
-            <p class="lead text-muted mb-4">Organize your tasks efficiently</p>
-            <div class="d-flex justify-content-center gap-3">
-                <a href="{% url 'tasks:task-list' %}" class="btn btn-primary">
+            <h1 class="display-4 fw-bold mb-3" style="color: #202124;">Intelligent Task Manager</h1>
+            <p class="lead text-muted mb-4">Streamline your workflow with smart task management and intelligent automation features</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'tasks:task-list' %}" class="btn btn-primary btn-lg">
                     <i class="fas fa-list me-2"></i>View Tasks
                 </a>
-                <a href="{% url 'tasks:dashboard' %}" class="btn btn-outline-primary">
+                <button type="button" class="btn btn-success btn-lg" onclick="showAICreateModal()">
+                    <i class="fas fa-magic me-2"></i>Create with AI
+                </button>
+                <a href="{% url 'tasks:dashboard' %}" class="btn btn-outline-primary btn-lg">
                     <i class="fas fa-chart-bar me-2"></i>Dashboard
                 </a>
             </div>
@@ -24,9 +27,72 @@
     </div>
 </div>
 
-<!-- Simple Features Grid -->
-<div class="row justify-content-center mt-4">
+<!-- AI Features Showcase -->
+<div class="row justify-content-center mt-5">
     <div class="col-lg-10">
+        <div class="text-center mb-5">
+            <h2 class="h3 mb-3">Smart Automation Features</h2>
+            <p class="text-muted">Enhance your productivity with intelligent task processing and analysis</p>
+        </div>
+        
+        <div class="row g-4">
+            <!-- AI Task Creation -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-brain text-success fa-2x"></i>
+                        </div>
+                        <h5 class="card-title">Smart Task Creation</h5>
+                        <p class="card-text text-muted">Describe your task in natural language and let our parser extract structure and details</p>
+                        <button class="btn btn-success btn-sm" onclick="showAICreateModal()">
+                            <i class="fas fa-plus me-1"></i>Try Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Estimation -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-calculator text-info fa-2x"></i>
+                        </div>
+                        <h5 class="card-title">Smart Estimation</h5>
+                        <p class="card-text text-muted">Get time estimates based on similar tasks and pattern analysis</p>
+                        <button class="btn btn-info btn-sm" onclick="showEstimationDemo()">
+                            <i class="fas fa-clock me-1"></i>Learn More
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Summaries -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-file-alt text-warning fa-2x"></i>
+                        </div>
+                        <h5 class="card-title">Auto Summaries</h5>
+                        <p class="card-text text-muted">Generate concise summaries of task progress and key activities</p>
+                        <button class="btn btn-warning btn-sm" onclick="showSummaryDemo()">
+                            <i class="fas fa-eye me-1"></i>Learn More
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Features Grid -->
+<div class="row justify-content-center mt-5">
+    <div class="col-lg-10">
+        <div class="text-center mb-4">
+            <h3 class="h4">Core Features</h3>
+        </div>
         <div class="row g-4">
             <div class="col-md-6">
                 <div class="d-flex align-items-start">
@@ -34,8 +100,8 @@
                         <i class="fas fa-tasks text-primary fa-lg"></i>
                     </div>
                     <div>
-                        <h5 class="mb-2">Task Management</h5>
-                        <p class="text-muted mb-0">Create, edit, and track tasks with status updates</p>
+                        <h5 class="mb-2">Smart Task Management</h5>
+                        <p class="text-muted mb-0">Create, edit, and track tasks with AI-powered status updates and intelligent categorization</p>
                     </div>
                 </div>
             </div>
@@ -46,8 +112,8 @@
                         <i class="fas fa-search text-primary fa-lg"></i>
                     </div>
                     <div>
-                        <h5 class="mb-2">Filter & Search</h5>
-                        <p class="text-muted mb-0">Find tasks by status, assignee, or search text</p>
+                        <h5 class="mb-2">Intelligent Search</h5>
+                        <p class="text-muted mb-0">Advanced filtering by status, assignee, priority, and semantic text search</p>
                     </div>
                 </div>
             </div>
@@ -55,11 +121,11 @@
             <div class="col-md-6">
                 <div class="d-flex align-items-start">
                     <div class="flex-shrink-0 me-3">
-                        <i class="fas fa-history text-primary fa-lg"></i>
+                        <i class="fas fa-chart-line text-primary fa-lg"></i>
                     </div>
                     <div>
-                        <h5 class="mb-2">Activity Tracking</h5>
-                        <p class="text-muted mb-0">Automatic logging of task changes</p>
+                        <h5 class="mb-2">Analytics & Insights</h5>
+                        <p class="text-muted mb-0">AI-powered analytics with automatic activity tracking and progress insights</p>
                     </div>
                 </div>
             </div>
@@ -70,8 +136,8 @@
                         <i class="fas fa-code text-primary fa-lg"></i>
                     </div>
                     <div>
-                        <h5 class="mb-2">REST API</h5>
-                        <p class="text-muted mb-0">Full API for task operations</p>
+                        <h5 class="mb-2">Developer-Friendly API</h5>
+                        <p class="text-muted mb-0">Full REST API with AI endpoints for task creation, estimation, and summarization</p>
                     </div>
                 </div>
             </div>
@@ -79,20 +145,264 @@
     </div>
 </div>
 
-<!-- Simple Call to Action -->
+<!-- Interactive Demo Section -->
 <div class="row justify-content-center mt-5">
-    <div class="col-lg-6">
+    <div class="col-lg-8">
         <div class="text-center py-4">
-            <h4 class="mb-3">Get started</h4>
-            <div class="d-flex justify-content-center gap-2">
+            <h4 class="mb-3">Experience Smart Task Management</h4>
+            <p class="text-muted mb-4">Try our intelligent features or explore existing tasks</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <button class="btn btn-success" onclick="showAICreateModal()">
+                    <i class="fas fa-magic me-2"></i>Smart Create
+                </button>
                 <a href="{% url 'tasks:task-create' %}" class="btn btn-primary">
-                    Create Task
+                    <i class="fas fa-plus me-2"></i>Manual Create
                 </a>
                 <a href="{% url 'tasks:task-list' %}" class="btn btn-outline-secondary">
-                    Browse Tasks
+                    <i class="fas fa-list me-2"></i>Browse Tasks
                 </a>
             </div>
         </div>
     </div>
 </div>
+
+<!-- AI Create Task Modal -->
+<div class="modal fade" id="aiCreateModal" tabindex="-1" aria-labelledby="aiCreateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="aiCreateModalLabel">
+                    <i class="fas fa-magic me-2"></i>Smart Task Creation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="aiCreateForm">
+                    <div class="mb-3">
+                        <label for="aiTaskText" class="form-label">Describe your task in natural language:</label>
+                        <textarea class="form-control" id="aiTaskText" rows="4" 
+                                placeholder="e.g., 'Create a high-priority bug fix for the login system that should be completed by next Friday. It involves updating the authentication module and testing with different user roles.'"></textarea>
+                        <div class="form-text">Our smart parser will extract title, description, priority, due date, and estimate from your text.</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary" onclick="parseTaskText()">
+                            <i class="fas fa-eye me-1"></i>Preview Parsing
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="createTaskFromAI()">
+                            <i class="fas fa-plus me-1"></i>Create Task
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Preview Section -->
+                <div id="parsePreview" class="mt-4" style="display: none;">
+                    <hr>
+                    <h6>Smart Parsing Preview:</h6>
+                    <div id="parseResult" class="border p-3 rounded bg-light"></div>
+                </div>
+                
+                <!-- Loading and Success States -->
+                <div id="aiCreateLoading" class="text-center mt-3" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Processing your request...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Demo Modals -->
+<div class="modal fade" id="estimationDemoModal" tabindex="-1" aria-labelledby="estimationDemoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="estimationDemoModalLabel">
+                    <i class="fas fa-calculator me-2"></i>Smart Estimation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Our estimation system analyzes:</p>
+                <ul>
+                    <li>Similar completed tasks</li>
+                    <li>Task complexity indicators</li>
+                    <li>Historical performance data</li>
+                    <li>Pattern matching algorithms</li>
+                </ul>
+                <p class="text-muted">To see smart estimation in action, create or view existing tasks with the "Get Estimate" feature.</p>
+                <div class="text-center">
+                    <a href="{% url 'tasks:task-list' %}" class="btn btn-primary">
+                        <i class="fas fa-list me-2"></i>View Tasks
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="summaryDemoModal" tabindex="-1" aria-labelledby="summaryDemoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="summaryDemoModalLabel">
+                    <i class="fas fa-file-alt me-2"></i>Auto Summaries
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Auto summaries generate:</p>
+                <ul>
+                    <li>Concise progress overviews</li>
+                    <li>Key activity highlights</li>
+                    <li>Status change summaries</li>
+                    <li>Action item extraction</li>
+                </ul>
+                <p class="text-muted">Summaries are generated as tasks progress and can be viewed in task details.</p>
+                <div class="text-center">
+                    <a href="{% url 'tasks:task-list' %}" class="btn btn-primary">
+                        <i class="fas fa-list me-2"></i>Explore Tasks
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// AI Create Task Functions
+function showAICreateModal() {
+    const modal = new bootstrap.Modal(document.getElementById('aiCreateModal'));
+    modal.show();
+}
+
+function showEstimationDemo() {
+    const modal = new bootstrap.Modal(document.getElementById('estimationDemoModal'));
+    modal.show();
+}
+
+function showSummaryDemo() {
+    const modal = new bootstrap.Modal(document.getElementById('summaryDemoModal'));
+    modal.show();
+}
+
+async function parseTaskText() {
+    const text = document.getElementById('aiTaskText').value.trim();
+    if (!text) {
+        alert('Please enter some text to parse.');
+        return;
+    }
+
+    const preview = document.getElementById('parsePreview');
+    const result = document.getElementById('parseResult');
+    
+    try {
+        const response = await fetch('/tasks/api/parse-text/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ text: text })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            result.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Title:</strong> ${data.title}<br>
+                        <strong>Priority:</strong> <span class="badge bg-${getPriorityColor(data.priority)}">${data.priority}</span><br>
+                        <strong>Type:</strong> ${data.task_type}<br>
+                        <strong>Estimate:</strong> ${data.estimate || 'Not specified'} SP
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Due Date:</strong> ${data.due_date || 'Not specified'}<br>
+                        <strong>Confidence:</strong> ${(data.confidence_score * 100).toFixed(1)}%<br>
+                        <strong>Tags:</strong> ${data.tags ? data.tags.join(', ') : 'None'}
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <strong>Description:</strong><br>
+                    <div class="text-muted">${data.description}</div>
+                </div>
+            `;
+            preview.style.display = 'block';
+        } else {
+            result.innerHTML = `<div class="alert alert-danger">${data.error || 'Parsing failed'}</div>`;
+            preview.style.display = 'block';
+        }
+    } catch (error) {
+        result.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+        preview.style.display = 'block';
+    }
+}
+
+async function createTaskFromAI() {
+    const text = document.getElementById('aiTaskText').value.trim();
+    if (!text) {
+        alert('Please enter some text to create a task.');
+        return;
+    }
+
+    const loading = document.getElementById('aiCreateLoading');
+    loading.style.display = 'block';
+
+    try {
+        // For now, we'll assume user ID 1 (you might want to get this from the session)
+        const response = await fetch('/tasks/api/create-from-text/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                text: text,
+                reporter_id: 1  // This should be dynamic based on logged-in user
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Success - redirect to the created task
+            window.location.href = `/tasks/${data.id}/`;
+        } else {
+            loading.style.display = 'none';
+            alert(`Error creating task: ${data.error || 'Unknown error'}`);
+        }
+    } catch (error) {
+        loading.style.display = 'none';
+        alert(`Error: ${error.message}`);
+    }
+}
+
+function getPriorityColor(priority) {
+    const colors = {
+        'low': 'secondary',
+        'medium': 'warning',
+        'high': 'danger',
+        'critical': 'dark'
+    };
+    return colors[priority?.toLowerCase()] || 'secondary';
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
 {% endblock %}
