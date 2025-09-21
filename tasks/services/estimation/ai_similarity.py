@@ -210,7 +210,8 @@ class AISimilarityEstimator(TaskEstimator):
 
         logger.info(
             f"AI similarity estimation completed for task {task.id}: "
-            f"{estimation_result.estimated_hours}h (confidence: {estimation_result.confidence_score:.2f}, tokens: {tokens_used})"
+            f"{estimation_result.estimated_hours}h (confidence: {estimation_result.confidence_score:.2f}, "
+            f"tokens: {tokens_used})"
         )
 
         return estimation_result

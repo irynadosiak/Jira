@@ -133,7 +133,8 @@ class EstimationPromptBuilder(PromptBuilderInterface):
         sections = [
             [
                 "You are an expert software project manager specializing in task estimation.",
-                "Your job is to estimate the effort required for a new task by analyzing its similarity to historical tasks.",
+                "Your job is to estimate the effort required for a new task by analyzing its "
+                "similarity to historical tasks.",
                 "",
             ],
             self._build_similar_tasks_section(),
@@ -253,7 +254,8 @@ class SummaryPromptBuilder(PromptBuilderInterface):
             base_instructions.extend(
                 [
                     "",
-                    "Update the previous summary with the new activities, maintaining continuity while highlighting recent changes.",
+                    "Update the previous summary with the new activities, maintaining continuity "
+                    "while highlighting recent changes.",
                 ]
             )
 

@@ -10,11 +10,8 @@ exclude =
     *.egg-info/,
     build/,
     dist/
-max-line-length = 88
-extend-ignore = 
-    # Black compatibility
-    E203,  # whitespace before ':'
-    W503,  # line break before binary operator
+max-line-length = 120
+extend-ignore = E203,W503
 per-file-ignores =
     # Django settings files
     */settings.py:E501

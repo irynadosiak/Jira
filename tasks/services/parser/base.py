@@ -28,6 +28,7 @@ class ParseResult:
     def __str__(self) -> str:
         return f"ParseResult: '{self.title}' ({self.priority}, {self.confidence_score:.2f})"
 
+
 class ParserError(Exception):
     """Base exception for parser errors."""
 
