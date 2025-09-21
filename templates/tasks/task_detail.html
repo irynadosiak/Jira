@@ -668,31 +668,62 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateSummary() {
         setLoadingState(true);
         
-        fetch(generateUrl, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCsrfToken(),
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                throw new Error(data.error);
-            }
+        try {
+            // Create WebSocket connection for summary generation
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/tasks/${taskId}/summary/`;
+            const ws = new WebSocket(wsUrl);
             
-            displaySummary(data.summary);
-            btnText.textContent = 'Regenerate Summary';
-            deleteBtn.style.display = 'inline-block';
-            showMessage(data.message || 'Summary generated successfully!', false);
-        })
-        .catch(error => {
-            console.error('Error generating summary:', error);
-            showMessage('Error generating summary: ' + error.message, true);
-        })
-        .finally(() => {
+            ws.onopen = function(event) {
+                // Send summary generation request
+                ws.send(JSON.stringify({
+                    action: 'generate_summary'
+                }));
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'connection') {
+                    console.log('WebSocket connected for summary generation');
+                } else if (data.type === 'progress') {
+                    // Update info message with progress
+                    const infoSpan = infoMessage.querySelector('span');
+                    if (infoSpan) {
+                        infoSpan.textContent = data.message;
+                    }
+                } else if (data.type === 'success') {
+                    // Extract summary data from the WebSocket response
+                    displaySummary(data.summary);
+                    btnText.textContent = 'Regenerate Summary';
+                    deleteBtn.style.display = 'inline-block';
+                    showMessage('Summary generated successfully!', false);
+                    ws.close();
+                } else if (data.type === 'error') {
+                    console.error('Error generating summary:', data.message);
+                    showMessage('Error generating summary: ' + data.message, true);
+                    ws.close();
+                }
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                showMessage('WebSocket connection error. Please try again.', true);
+            };
+            
+            ws.onclose = function(event) {
+                setLoadingState(false);
+                if (event.code !== 1000) {
+                    console.error('WebSocket closed unexpectedly:', event.code, event.reason);
+                    showMessage('Connection lost. Please try again.', true);
+                }
+            };
+            
+        } catch (error) {
+            console.error('Error creating WebSocket:', error);
+            showMessage('Error connecting to server: ' + error.message, true);
             setLoadingState(false);
-        });
+        }
     }
     
     function deleteSummary() {
@@ -781,28 +812,59 @@ document.addEventListener('DOMContentLoaded', function() {
     function getEstimation() {
         setEstimationLoadingState(true);
         
-        fetch(estimationUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                throw new Error(data.detail || data.error);
-            }
+        try {
+            // Create WebSocket connection for estimation
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/tasks/${taskId}/estimation/`;
+            const ws = new WebSocket(wsUrl);
             
-            displayEstimation(data);
-            showEstimationMessage('Estimation generated successfully!', false);
-        })
-        .catch(error => {
-            console.error('Error getting estimation:', error);
-            showEstimationMessage('Error getting estimation: ' + error.message, true);
-        })
-        .finally(() => {
+            ws.onopen = function(event) {
+                // Send estimation request
+                ws.send(JSON.stringify({
+                    action: 'estimate'
+                }));
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'connection') {
+                    console.log('WebSocket connected for estimation');
+                } else if (data.type === 'progress') {
+                    // Update info message with progress
+                    const infoSpan = estimationInfoMessage.querySelector('span');
+                    if (infoSpan) {
+                        infoSpan.textContent = data.message;
+                    }
+                } else if (data.type === 'success') {
+                    // Extract estimation data from the WebSocket response
+                    displayEstimation(data.estimation);
+                    showEstimationMessage('Estimation generated successfully!', false);
+                    ws.close();
+                } else if (data.type === 'error') {
+                    console.error('Error getting estimation:', data.message);
+                    showEstimationMessage('Error getting estimation: ' + data.message, true);
+                    ws.close();
+                }
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                showEstimationMessage('WebSocket connection error. Please try again.', true);
+            };
+            
+            ws.onclose = function(event) {
+                setEstimationLoadingState(false);
+                if (event.code !== 1000) {
+                    console.error('WebSocket closed unexpectedly:', event.code, event.reason);
+                }
+            };
+            
+        } catch (error) {
+            console.error('Error creating WebSocket:', error);
+            showEstimationMessage('Error connecting to server: ' + error.message, true);
             setEstimationLoadingState(false);
-        });
+        }
     }
     
     function displayEstimation(data) {

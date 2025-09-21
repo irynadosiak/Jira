@@ -473,47 +473,106 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }, 1000);
         {% else %}
-        // For existing tasks, use the estimation API
+        // For existing tasks, use WebSocket for estimation
         const taskId = {{ task.id }};
-        const estimationUrl = `/tasks/api/${taskId}/estimate/`;
         
-        fetch(estimationUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                throw new Error(data.detail || data.error);
-            }
+        try {
+            // Create WebSocket connection for estimation
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/tasks/${taskId}/estimation/`;
+            const ws = new WebSocket(wsUrl);
             
-            // Display the AI suggestion
-            aiSuggestedHours.textContent = data.estimated_hours;
-            aiConfidence.textContent = Math.round(data.confidence_score * 100);
-            aiEstimateResult.style.display = 'block';
-            aiEstimateResult.style.background = '#e3f2fd';
-            aiEstimateResult.style.borderColor = '#bbdefb';
+            ws.onopen = function(event) {
+                // Send estimation request
+                ws.send(JSON.stringify({
+                    action: 'estimate'
+                }));
+            };
             
-            // Show custom modal instead of confirm dialog
-            showEstimationModal(data.estimated_hours, Math.round(data.confidence_score * 100));
-        })
-        .catch(error => {
-            console.error('Error getting AI estimate:', error);
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'connection') {
+                    console.log('WebSocket connected for estimation');
+                } else if (data.type === 'progress') {
+                    // Update result display with progress
+                    aiEstimateResult.style.display = 'block';
+                    aiEstimateResult.style.background = '#e3f2fd';
+                    aiEstimateResult.style.borderColor = '#bbdefb';
+                    aiEstimateResult.innerHTML = `
+                        <small style="color: #1e40af;">
+                            <i class="fas fa-spinner fa-spin" style="margin-right: 4px;"></i>
+                            ${data.message}
+                        </small>
+                    `;
+                } else if (data.type === 'success') {
+                    // Extract estimation data from the WebSocket response
+                    const estimationData = data.estimation;
+                    
+                    // Display the AI suggestion
+                    aiSuggestedHours.textContent = estimationData.estimated_hours;
+                    aiConfidence.textContent = Math.round(estimationData.confidence_score * 100);
+                    aiEstimateResult.style.display = 'block';
+                    aiEstimateResult.style.background = '#e3f2fd';
+                    aiEstimateResult.style.borderColor = '#bbdefb';
+                    aiEstimateResult.innerHTML = `
+                        <small style="color: #1e40af; font-size: 13px; line-height: 1.4;">
+                            <i class="fas fa-lightbulb" style="margin-right: 6px;"></i>
+                            AI suggests: <strong>${estimationData.estimated_hours}</strong> hours (confidence: <span>${Math.round(estimationData.confidence_score * 100)}</span>%)
+                        </small>
+                    `;
+                    
+                    // Show custom modal instead of confirm dialog
+                    showEstimationModal(estimationData.estimated_hours, Math.round(estimationData.confidence_score * 100));
+                    ws.close();
+                } else if (data.type === 'error') {
+                    console.error('Error getting AI estimate:', data.message);
+                    aiEstimateResult.style.display = 'block';
+                    aiEstimateResult.style.background = '#f8d7da';
+                    aiEstimateResult.style.borderColor = '#f5c6cb';
+                    aiEstimateResult.innerHTML = `
+                        <small style="color: #721c24;">
+                            <i class="fas fa-exclamation-triangle" style="margin-right: 4px;"></i>
+                            Error getting AI estimate: ${data.message}
+                        </small>
+                    `;
+                    ws.close();
+                }
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                aiEstimateResult.style.display = 'block';
+                aiEstimateResult.style.background = '#f8d7da';
+                aiEstimateResult.style.borderColor = '#f5c6cb';
+                aiEstimateResult.innerHTML = `
+                    <small style="color: #721c24;">
+                        <i class="fas fa-exclamation-triangle" style="margin-right: 4px;"></i>
+                        WebSocket connection error. Please try again.
+                    </small>
+                `;
+            };
+            
+            ws.onclose = function(event) {
+                setAIEstimateLoadingState(false);
+                if (event.code !== 1000) {
+                    console.error('WebSocket closed unexpectedly:', event.code, event.reason);
+                }
+            };
+            
+        } catch (error) {
+            console.error('Error creating WebSocket:', error);
             aiEstimateResult.style.display = 'block';
             aiEstimateResult.style.background = '#f8d7da';
             aiEstimateResult.style.borderColor = '#f5c6cb';
             aiEstimateResult.innerHTML = `
                 <small style="color: #721c24;">
                     <i class="fas fa-exclamation-triangle" style="margin-right: 4px;"></i>
-                    Error getting AI estimate: ${error.message}
+                    Error connecting to server: ${error.message}
                 </small>
             `;
-        })
-        .finally(() => {
             setAIEstimateLoadingState(false);
-        });
+        }
         {% endif %}
     }
     

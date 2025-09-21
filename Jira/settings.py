@@ -16,6 +16,11 @@ from typing import List
 
 from dotenv import load_dotenv
 
+try:
+    import dj_database_url
+except ImportError:
+    dj_database_url = None  # type: ignore
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -38,16 +43,21 @@ ALLOWED_HOSTS: List[str] = [
     host.strip() for host in os.getenv("ALLOWED_HOSTS", "").split(",") if host.strip()
 ]
 
+if not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "web"]
+
 
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "channels",
     "rest_framework",
     "django_filters",
     "debug_toolbar",
@@ -175,3 +185,27 @@ OPENAI_TEMPERATURE = float(
 
 # Use mock AI responses for development when no API key is available
 USE_MOCK_AI = os.getenv("USE_MOCK_AI", "True").lower() in ("true", "1", "yes")
+
+# Channels configuration
+ASGI_APPLICATION = "Jira.asgi.application"
+
+# Redis configuration from environment
+REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
+CHANNEL_LAYERS_REDIS = os.getenv("CHANNEL_LAYERS_REDIS", "redis://127.0.0.1:6379/1")
+
+# Channel layers configuration
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [CHANNEL_LAYERS_REDIS],
+            "capacity": 1500,
+            "expiry": 10,
+        },
+    },
+}
+
+# Database configuration for Docker
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL and dj_database_url:
+    DATABASES["default"] = dj_database_url.parse(DATABASE_URL)  # type: ignore[assignment]

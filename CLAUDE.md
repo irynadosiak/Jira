@@ -8,10 +8,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Install dependencies
 make install
 
+# Start Redis (required for WebSocket features)
+make docker-up
+
 # Set up/update database
 make migrate
 
-# Run development server
+# Run development server with WebSocket support
 make runserver
 
 # Run all tests
@@ -35,6 +38,11 @@ python3 manage.py migrate
 # Run specific test class or method
 python3 manage.py test tasks.tests.TaskModelTest
 python3 manage.py test tasks.test_api.TaskAPITest.test_create_task
+
+# Docker commands (Redis only)
+make docker-up    # Start Redis
+make docker-down  # Stop Redis
+make docker-logs  # View Redis logs
 ```
 
 ## High-Level Architecture
@@ -90,6 +98,23 @@ python3 manage.py test tasks.test_api.TaskAPITest.test_create_task
 - `DELETE /tasks/api/{id}/` - Delete task
 - `GET /tasks/api/{id}/activities/` - Get task activities
 - `GET /tasks/api/users/` - List users
+
+### WebSocket Features
+- **Real-time AI Integration**: All AI features use WebSockets for live progress updates
+- **Django Channels**: Provides WebSocket support with Django's built-in `runserver`
+- **Redis**: Required for WebSocket channel layers (use `make docker-up` to start)
+- **ASGI Support**: Django Channels automatically enables ASGI with `runserver`
+
+#### WebSocket Endpoints
+- `ws://localhost:8000/ws/tasks/{id}/estimation/` - Real-time task estimation
+- `ws://localhost:8000/ws/tasks/{id}/summary/` - Real-time summary generation
+- `ws://localhost:8000/ws/tasks/parse/` - Parse text to task data
+- `ws://localhost:8000/ws/tasks/create/` - Create tasks from text
+
+#### Integration Points
+- **Task Detail Pages**: AI Estimation and Summary buttons use WebSockets
+- **AI Create Modal**: Parse and create functions use WebSockets
+- **Progress Updates**: Real-time feedback during AI processing
 
 ### Development Notes
 - Currently configured for development (DEBUG=True)

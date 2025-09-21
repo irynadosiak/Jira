@@ -181,8 +181,63 @@
                     <div class="mb-3">
                         <label for="aiTaskText" class="form-label">Describe your task in natural language:</label>
                         <textarea class="form-control" id="aiTaskText" rows="4" 
-                                placeholder="e.g., 'Create a high-priority bug fix for the login system that should be completed by next Friday. It involves updating the authentication module and testing with different user roles.'"></textarea>
+                                placeholder="Describe your task here..."></textarea>
                         <div class="form-text">Our smart parser will extract title, description, priority, due date, and estimate from your text.</div>
+                    </div>
+                    
+                    <!-- Examples Section -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted fw-bold">💡 Try these examples:</small>
+                            <button type="button" class="btn btn-link btn-sm p-0" onclick="clearTaskText()">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                        <div class="examples-container">
+                            <div class="example-item" onclick="useExample(this)">
+                                <div class="example-text">
+                                    <strong>Bug Fix:</strong> "Fix the critical login bug that's preventing users from accessing the dashboard. This is urgent priority and should take about 3-4 hours to complete by tomorrow."
+                                </div>
+                                <div class="example-tags">
+                                    <span class="badge bg-danger">Critical</span>
+                                    <span class="badge bg-info">Bug</span>
+                                    <span class="badge bg-warning">3-4h</span>
+                                </div>
+                            </div>
+                            
+                            <div class="example-item" onclick="useExample(this)">
+                                <div class="example-text">
+                                    <strong>Feature:</strong> "Create a new user profile page with photo upload functionality. Medium priority feature that will require database changes and UI design, estimated 8-10 hours over next week."
+                                </div>
+                                <div class="example-tags">
+                                    <span class="badge bg-warning">Medium</span>
+                                    <span class="badge bg-success">Feature</span>
+                                    <span class="badge bg-info">8-10h</span>
+                                </div>
+                            </div>
+                            
+                            <div class="example-item" onclick="useExample(this)">
+                                <div class="example-text">
+                                    <strong>Enhancement:</strong> "Improve the search functionality to include filters and sorting options. Low priority enhancement that should be completed within 2 weeks, roughly 5-6 hours of work."
+                                </div>
+                                <div class="example-tags">
+                                    <span class="badge bg-secondary">Low</span>
+                                    <span class="badge bg-primary">Enhancement</span>
+                                    <span class="badge bg-warning">5-6h</span>
+                                </div>
+                            </div>
+                            
+                            <div class="example-item" onclick="useExample(this)">
+                                <div class="example-text">
+                                    <strong>Documentation:</strong> "Write API documentation for the new payment endpoints. Include examples and error codes. Should be done by end of week, approximately 2-3 hours."
+                                </div>
+                                <div class="example-tags">
+                                    <span class="badge bg-info">Medium</span>
+                                    <span class="badge bg-light text-dark">Documentation</span>
+                                    <span class="badge bg-warning">2-3h</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="d-flex gap-2">
                         <button type="button" class="btn btn-outline-secondary" onclick="parseTaskText()">
@@ -287,8 +342,27 @@ function showSummaryDemo() {
     modal.show();
 }
 
+function useExample(element) {
+    const exampleText = element.querySelector('.example-text').textContent;
+    // Extract just the quoted text part
+    const match = exampleText.match(/"([^"]+)"/);
+    if (match) {
+        document.getElementById('aiTaskText').value = match[1];
+        // Scroll to textarea
+        document.getElementById('aiTaskText').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('aiTaskText').focus();
+    }
+}
+
+function clearTaskText() {
+    document.getElementById('aiTaskText').value = '';
+    document.getElementById('parsePreview').style.display = 'none';
+}
+
 async function parseTaskText() {
+    console.log('parseTaskText() called');
     const text = document.getElementById('aiTaskText').value.trim();
+    console.log('Text to parse:', text.substring(0, 100) + '...');
     if (!text) {
         alert('Please enter some text to parse.');
         return;
@@ -297,46 +371,85 @@ async function parseTaskText() {
     const preview = document.getElementById('parsePreview');
     const result = document.getElementById('parseResult');
     
+    // Show loading state
+    result.innerHTML = `
+        <div class="alert alert-info">
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            Parsing text with AI...
+        </div>
+    `;
+    preview.style.display = 'block';
+    
     try {
-        const response = await fetch('/tasks/api/parse-text/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({ text: text })
-        });
-
-        const data = await response.json();
+        // Create WebSocket connection for parsing
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/tasks/parse/`;
+        const ws = new WebSocket(wsUrl);
         
-        if (response.ok) {
-            result.innerHTML = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <strong>Title:</strong> ${data.title}<br>
-                        <strong>Priority:</strong> <span class="badge bg-${getPriorityColor(data.priority)}">${data.priority}</span><br>
-                        <strong>Type:</strong> ${data.task_type}<br>
-                        <strong>Estimate:</strong> ${data.estimate || 'Not specified'} SP
+        ws.onopen = function(event) {
+            console.log('WebSocket connection opened for parsing');
+            // Send parsing request
+            ws.send(JSON.stringify({
+                action: 'parse',
+                text: text
+            }));
+            console.log('Sent parsing request:', text.substring(0, 100) + '...');
+        };
+        
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'connection') {
+                console.log('WebSocket connected for parsing');
+            } else if (data.type === 'progress') {
+                result.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        ${data.message}
                     </div>
-                    <div class="col-md-6">
-                        <strong>Due Date:</strong> ${data.due_date || 'Not specified'}<br>
-                        <strong>Confidence:</strong> ${(data.confidence_score * 100).toFixed(1)}%<br>
-                        <strong>Tags:</strong> ${data.tags ? data.tags.join(', ') : 'None'}
+                `;
+            } else if (data.type === 'success') {
+                const taskData = data.parsed_data;
+                result.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Title:</strong> ${taskData.title}<br>
+                            <strong>Priority:</strong> <span class="badge bg-${getPriorityColor(taskData.priority)}">${taskData.priority}</span><br>
+                            <strong>Type:</strong> ${taskData.task_type}<br>
+                            <strong>Estimate:</strong> ${taskData.estimate || 'Not specified'} SP
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Due Date:</strong> ${taskData.due_date || 'Not specified'}<br>
+                            <strong>Confidence:</strong> ${(taskData.confidence_score * 100).toFixed(1)}%<br>
+                            <strong>Tags:</strong> ${taskData.tags ? taskData.tags.join(', ') : 'None'}
+                        </div>
                     </div>
-                </div>
-                <div class="mt-2">
-                    <strong>Description:</strong><br>
-                    <div class="text-muted">${data.description}</div>
-                </div>
-            `;
-            preview.style.display = 'block';
-        } else {
-            result.innerHTML = `<div class="alert alert-danger">${data.error || 'Parsing failed'}</div>`;
-            preview.style.display = 'block';
-        }
+                    <div class="mt-2">
+                        <strong>Description:</strong><br>
+                        <div class="text-muted">${taskData.description}</div>
+                    </div>
+                `;
+                ws.close();
+            } else if (data.type === 'error') {
+                result.innerHTML = `<div class="alert alert-danger">${data.message || 'Parsing failed'}</div>`;
+                ws.close();
+            }
+        };
+        
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            console.error('WebSocket URL was:', wsUrl);
+            result.innerHTML = `<div class="alert alert-danger">WebSocket connection error. Please try again.</div>`;
+        };
+        
+        ws.onclose = function(event) {
+            if (event.code !== 1000) {
+                console.error('WebSocket closed unexpectedly:', event.code, event.reason);
+            }
+        };
+        
     } catch (error) {
         result.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
-        preview.style.display = 'block';
     }
 }
 
@@ -351,28 +464,54 @@ async function createTaskFromAI() {
     loading.style.display = 'block';
 
     try {
-        // For now, we'll assume user ID 1 (you might want to get this from the session)
-        const response = await fetch('/tasks/api/create-from-text/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({ 
-                text: text,
-                reporter_id: 1  // This should be dynamic based on logged-in user
-            })
-        });
-
-        const data = await response.json();
+        // Create WebSocket connection for task creation
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/tasks/create/`;
+        const ws = new WebSocket(wsUrl);
         
-        if (response.ok) {
-            // Success - redirect to the created task
-            window.location.href = `/tasks/${data.id}/`;
-        } else {
+        ws.onopen = function(event) {
+            // Send task creation request
+            ws.send(JSON.stringify({
+                action: 'create',
+                text: text
+            }));
+        };
+        
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'connection') {
+                console.log('WebSocket connected for task creation');
+            } else if (data.type === 'progress') {
+                // Update loading message with progress
+                const loadingDiv = document.querySelector('#aiCreateLoading .alert');
+                if (loadingDiv) {
+                    loadingDiv.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${data.message}`;
+                }
+            } else if (data.type === 'success') {
+                // Success - redirect to the created task
+                window.location.href = `/tasks/${data.task.id}/`;
+            } else if (data.type === 'error') {
+                loading.style.display = 'none';
+                alert(`Error creating task: ${data.message || 'Unknown error'}`);
+                ws.close();
+            }
+        };
+        
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
             loading.style.display = 'none';
-            alert(`Error creating task: ${data.error || 'Unknown error'}`);
-        }
+            alert('WebSocket connection error. Please try again.');
+        };
+        
+        ws.onclose = function(event) {
+            if (event.code !== 1000) {
+                console.error('WebSocket closed unexpectedly:', event.code, event.reason);
+                loading.style.display = 'none';
+                alert('Connection lost. Please try again.');
+            }
+        };
+        
     } catch (error) {
         loading.style.display = 'none';
         alert(`Error: ${error.message}`);
@@ -404,5 +543,72 @@ function getCookie(name) {
     return cookieValue;
 }
 </script>
+
+<style>
+.examples-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    background: #fafbfc;
+}
+
+.example-item {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.example-item:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    transform: translateY(-1px);
+}
+
+.example-item:last-child {
+    margin-bottom: 0;
+}
+
+.example-text {
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    color: #374151;
+}
+
+.example-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.example-tags .badge {
+    font-size: 10px;
+    padding: 2px 6px;
+}
+
+.examples-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.examples-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.examples-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.examples-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+</style>
 
 {% endblock %}

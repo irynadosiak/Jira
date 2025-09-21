@@ -1,4 +1,4 @@
-.PHONY: help install migrate runserver test lint format check-format type-check clean
+.PHONY: help install migrate runserver test lint format check-format type-check clean docker-up docker-down docker-logs
 
 help:
 	@echo "Simple Task Manager Commands:"
@@ -6,6 +6,11 @@ help:
 	@echo "  migrate       - Set up database"
 	@echo "  runserver     - Start development server"
 	@echo "  test          - Run tests"
+	@echo ""
+	@echo "Docker Commands:"
+	@echo "  docker-up     - Start Redis in Docker"
+	@echo "  docker-down   - Stop Redis"
+	@echo "  docker-logs   - View Redis logs"
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  lint          - Run all linters (flake8, mypy, isort check)"
@@ -56,3 +61,14 @@ clean:
 	find . -type d -name "__pycache__" -delete
 	find . -type d -name "*.egg-info" -exec rm -rf {} +
 	@echo "✅ Cache files cleaned!"
+
+docker-up:
+	docker-compose up -d redis
+	@echo "✅ Redis started! Run 'make runserver' to start the Django app with WebSocket support."
+
+docker-down:
+	docker-compose down
+	@echo "✅ Redis stopped!"
+
+docker-logs:
+	docker-compose logs -f redis

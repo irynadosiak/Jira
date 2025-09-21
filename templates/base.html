@@ -609,35 +609,76 @@
             formContent.style.display = 'none';
             loadingSpinner.style.display = 'block';
             
-            const response = await fetch('/tasks/api/parse-text/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                },
-                body: JSON.stringify({ text: text })
-            });
+            // Create WebSocket connection for parsing
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/tasks/parse/`;
+            console.log('Creating WebSocket connection to:', wsUrl);
+            const ws = new WebSocket(wsUrl);
             
-            const data = await response.json();
+            ws.onopen = function(event) {
+                console.log('WebSocket connection opened for parsing');
+                // Send parsing request
+                ws.send(JSON.stringify({
+                    action: 'parse',
+                    text: text
+                }));
+                console.log('Sent parsing request via WebSocket');
+            };
             
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to parse text');
-            }
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log('Received WebSocket message:', data);
+                
+                if (data.type === 'connection') {
+                    console.log('WebSocket connected for parsing');
+                } else if (data.type === 'progress') {
+                    console.log('Parsing progress:', data.message);
+                    // Update loading message if needed
+                } else if (data.type === 'success') {
+                    console.log('Parsing successful:', data);
+                    // Extract parsed data from WebSocket response
+                    const parsedData = data.parsed_data;
+                    aiCurrentParseResult = parsedData;
+                    displayAIParseResult(parsedData);
+                    
+                    // Get suggestions
+                    getAISuggestions(text);
+                    
+                    // Run AI estimation on the parsed task
+                    runAIEstimationOnParsedTask(parsedData);
+                    
+                    // Hide loading and show form
+                    loadingSpinner.style.display = 'none';
+                    formContent.style.display = 'block';
+                    ws.close();
+                } else if (data.type === 'error') {
+                    console.error('WebSocket parsing error:', data.message);
+                    showCustomAlert('Failed to parse text: ' + data.message, 'error');
+                    loadingSpinner.style.display = 'none';
+                    formContent.style.display = 'block';
+                    ws.close();
+                }
+            };
             
-            aiCurrentParseResult = data;
-            displayAIParseResult(data);
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                console.error('WebSocket URL was:', wsUrl);
+                showCustomAlert('WebSocket connection error. Please try again.', 'error');
+                loadingSpinner.style.display = 'none';
+                formContent.style.display = 'block';
+            };
             
-            // Get suggestions
-            getAISuggestions(text);
-            
-            // Run AI estimation on the parsed task
-            runAIEstimationOnParsedTask(data);
+            ws.onclose = function(event) {
+                if (event.code !== 1000) {
+                    console.error('WebSocket closed unexpectedly:', event.code, event.reason);
+                    loadingSpinner.style.display = 'none';
+                    formContent.style.display = 'block';
+                }
+            };
             
         } catch (error) {
-            console.error('Parse error:', error);
-            showCustomAlert('Failed to parse text: ' + error.message, 'error');
-        } finally {
-            // Hide loading
+            console.error('Error creating WebSocket:', error);
+            showCustomAlert('Error connecting to server: ' + error.message, 'error');
             loadingSpinner.style.display = 'none';
             formContent.style.display = 'block';
         }
