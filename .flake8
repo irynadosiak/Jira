@@ -1,13 +1,15 @@
 [flake8]
 exclude = 
-    ./venv,
-    ./.venv,
-    ./__pycache__,
-    ./.git,
-    ./*/migrations,
-    ./.pytest_cache,
-    ./.mypy_cache,
-    ./*.egg-info
+    venv/,
+    .venv/,
+    __pycache__/,
+    .git/,
+    */migrations/,
+    .pytest_cache/,
+    .mypy_cache/,
+    *.egg-info/,
+    build/,
+    dist/
 max-line-length = 88
 extend-ignore = 
     # Black compatibility

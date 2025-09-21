@@ -1,11 +1,11 @@
 # Simple Task Manager
 
-A clean Django-based task management system with web interface and REST API.
+A clean Django-based task management system with web interface and REST API. Built with Poetry for modern Python dependency management.
 
 ## Quick Start
 
 ```bash
-# Install and setup
+# Install dependencies with Poetry
 make install
 make migrate
 
@@ -40,6 +40,16 @@ Add query parameters: `?status=todo&assignee=1&search=bug`
 
 ```bash
 make test      # Run tests
+make lint      # Code quality checks
+make format    # Format code
+```
+
+### Using Poetry
+
+```bash
+poetry install          # Install dependencies
+poetry add package      # Add new dependency
+poetry run python manage.py runserver  # Run commands in Poetry env
 ```
 
 ## Project Structure

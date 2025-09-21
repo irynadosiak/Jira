@@ -2,7 +2,7 @@
 
 help:
 	@echo "Simple Task Manager Commands:"
-	@echo "  install       - Install dependencies"
+	@echo "  install       - Install dependencies with Poetry"
 	@echo "  migrate       - Set up database"
 	@echo "  runserver     - Start development server"
 	@echo "  test          - Run tests"
@@ -16,40 +16,40 @@ help:
 	@echo "  clean         - Remove cache files"
 
 install:
-	pip3 install -r requirements.txt
+	poetry install
 
 migrate:
-	python3 manage.py makemigrations
-	python3 manage.py migrate
+	poetry run python manage.py makemigrations
+	poetry run python manage.py migrate
 
 runserver:
-	python3 manage.py runserver
+	poetry run python manage.py runserver
 
 test:
-	python3 manage.py test
+	poetry run python manage.py test
 
 # Linting commands
 lint: check-format type-check
 	@echo "Running flake8..."
-	flake8 . --exclude=venv,.venv,__pycache__,.git
+	poetry run flake8 . --exclude="venv,.venv,__pycache__,.git,*/migrations/*"
 	@echo "Checking import order..."
-	isort --check-only --diff .
+	poetry run isort --check-only --diff .
 	@echo "✅ All linting checks passed!"
 
 format:
 	@echo "Formatting with black..."
-	black .
+	poetry run black .
 	@echo "Sorting imports with isort..."
-	isort .
+	poetry run isort .
 	@echo "✅ Code formatted!"
 
 check-format:
 	@echo "Checking code formatting..."
-	black --check .
+	poetry run black --check .
 
 type-check:
 	@echo "Running mypy type checking..."
-	mypy .
+	poetry run mypy .
 
 clean:
 	find . -type f -name "*.pyc" -delete

@@ -1,0 +1,82 @@
+[tool.poetry]
+name = "jira-task-manager"
+version = "0.1.0"
+description = "A Django-based task management system with AI-powered summaries"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+packages = [{include = "tasks"}, {include = "Jira"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+django = "5.2.6"
+djangorestframework = "3.14.0"
+django-filter = "23.3"
+django-debug-toolbar = "4.2.0"
+python-dotenv = "1.0.0"
+openai = ">=1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "23.9.1"
+flake8 = "6.1.0"
+isort = "5.12.0"
+mypy = "1.6.1"
+django-stubs = "4.2.6"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_django = "django"
+known_first_party = ["tasks", "Jira"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "DJANGO", "FIRSTPARTY", "LOCALFOLDER"]
+
+[tool.mypy]
+python_version = "3.11"
+check_untyped_defs = true
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+exclude = [
+    "^venv/",
+    "^\\.venv/",
+    "^__pycache__/",
+    "^\\.git/",
+]
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "Jira.settings"
+
+[[tool.mypy.overrides]]
+module = "*.migrations.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "manage"
+ignore_errors = true
